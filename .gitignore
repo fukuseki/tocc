@@ -1,1 +1,5 @@
 a.out
+tocc
+*.o
+*~
+tmp*
