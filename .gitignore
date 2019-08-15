@@ -3,3 +3,4 @@ tocc
 *.o
 *~
 tmp*
+.vscode/
