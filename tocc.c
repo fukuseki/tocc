@@ -162,6 +162,7 @@ Node* new_node_num(int val) {
 }
 
 Node* mul();
+Node* unaly();
 Node* term();
 
 Node* expr() {
@@ -179,17 +180,27 @@ Node* expr() {
 }
 
 Node* mul() {
-  Node* node = term();
+  Node* node = unaly();
 
   for (;;) {
     if (consume('*')) {
-      node = new_node(ND_MUL, node, term());
+      node = new_node(ND_MUL, node, unaly());
     } else if (consume('/')) {
-      node = new_node(ND_DIV, node, term());
+      node = new_node(ND_DIV, node, unaly());
     } else {
       return node;
     }
   }
+}
+
+Node* unaly() {
+  if (consume('+')) {
+    return term();
+  }
+  if (consume('-')) {
+    return new_node(ND_SUB, new_node_num(0), term());
+  }
+  return term();
 }
 
 Node* term() {
