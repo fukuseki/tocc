@@ -165,11 +165,16 @@ Node* new_node_num(int val) {
   return node;
 }
 
+Node* add();
 Node* mul();
 Node* unaly();
 Node* term();
 
 Node* expr() {
+  return add();
+}
+
+Node* add() {
   Node* node = mul(0);
 
   for (;;) {
