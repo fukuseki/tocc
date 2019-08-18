@@ -113,7 +113,7 @@ Token* tokenize(char* p) {
 
     // 2文字の演算子
     if (memcmp(p, "==", 2) == 0 || memcmp(p, "!=", 2) == 0 ||
-        memcmp(p, "<=", 2) == 0) {
+        memcmp(p, "<=", 2) == 0 || memcmp(p, ">=", 2) == 0) {
       cur = new_token(TK_RESERVED, cur, p);
       p += 2;
       cur->len = 2;
@@ -122,7 +122,7 @@ Token* tokenize(char* p) {
 
     // 1文字の演算子
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<') {
+        *p == ')' || *p == '<' || *p == '>') {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
       continue;
@@ -212,6 +212,10 @@ Node* relational() {
       node = new_node(ND_LT, node, add());
     } else if (consume("<=")) {
       node = new_node(ND_LE, node, add());
+    } else if (consume(">")) {
+      node = new_node(ND_LT, add(), node);
+    } else if (consume(">=")) {
+      node = new_node(ND_LE, add(), node);
     } else {
       return node;
     }
