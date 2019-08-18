@@ -121,7 +121,7 @@ Token* tokenize(char* p) {
 
     // 1文字の演算子
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')') {
+        *p == ')' || *p == '<') {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
       continue;
@@ -148,6 +148,7 @@ typedef enum {
   ND_DIV,  // /
   ND_EQ,   // ==
   ND_NE,   // !=
+  ND_LT,   // <
   ND_NUM,  // 整数
 } NodeKind;
 
@@ -177,6 +178,7 @@ Node* new_node_num(int val) {
 }
 
 Node* equality();
+Node* relational();
 Node* add();
 Node* mul();
 Node* unaly();
@@ -187,13 +189,25 @@ Node* expr() {
 }
 
 Node* equality() {
-  Node* node = add();
+  Node* node = relational();
 
   for (;;) {
     if (consume("==")) {
-      node = new_node(ND_EQ, node, add());
+      node = new_node(ND_EQ, node, relational());
     } else if (consume("!=")) {
-      node = new_node(ND_NE, node, add());
+      node = new_node(ND_NE, node, relational());
+    } else {
+      return node;
+    }
+  }
+}
+
+Node* relational() {
+  Node* node = add();
+
+  for (;;) {
+    if (consume("<")) {
+      node = new_node(ND_LT, node, add());
     } else {
       return node;
     }
@@ -283,6 +297,11 @@ void gen(Node* node) {
     case ND_NE:
       printf("  cmp rax, rdi\n");
       printf("  setne al\n");
+      printf("  movzb rax, al\n");
+      break;
+    case ND_LT:
+      printf("  cmp rax, rdi\n");
+      printf("  setl al\n");
       printf("  movzb rax, al\n");
       break;
     default:
