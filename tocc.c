@@ -20,6 +20,7 @@ struct Token {
   Token* next;     // 次のトークン
   int val;         // kindがTK_NUMの場合、その数値
   char* str;       // トークン文字列
+  int len;         // トークンの長さ
 };
 
 // 現在注目しているトークン
@@ -54,8 +55,9 @@ void error_at(char* loc, char* fmt, ...) {
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
-bool consume(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op) {
+bool consume(char* op) {
+  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
+      memcmp(token->str, op, token->len)) {
     return false;
   }
   token = token->next;
@@ -64,9 +66,10 @@ bool consume(char op) {
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
 // それ以外の場合にはエラーを報告する。
-void expect(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op) {
-    error_at(token->str, "'%c'ではありません", op);
+void expect(char* op) {
+  if (token->kind != TK_RESERVED || strlen(op) != token->len ||
+      memcmp(token->str, op, token->len)) {
+    error_at(token->str, "'%s'ではありません", op);
   }
   token = token->next;
 }
@@ -111,6 +114,7 @@ Token* tokenize(char* p) {
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')') {
       cur = new_token(TK_RESERVED, cur, p++);
+      cur->len = 1;
       continue;
     }
 
@@ -169,9 +173,9 @@ Node* expr() {
   Node* node = mul(0);
 
   for (;;) {
-    if (consume('+')) {
+    if (consume("+")) {
       node = new_node(ND_ADD, node, mul());
-    } else if (consume('-')) {
+    } else if (consume("-")) {
       node = new_node(ND_SUB, node, mul());
     } else {
       return node;
@@ -183,9 +187,9 @@ Node* mul() {
   Node* node = unaly();
 
   for (;;) {
-    if (consume('*')) {
+    if (consume("*")) {
       node = new_node(ND_MUL, node, unaly());
-    } else if (consume('/')) {
+    } else if (consume("/")) {
       node = new_node(ND_DIV, node, unaly());
     } else {
       return node;
@@ -194,10 +198,10 @@ Node* mul() {
 }
 
 Node* unaly() {
-  if (consume('+')) {
+  if (consume("+")) {
     return term();
   }
-  if (consume('-')) {
+  if (consume("-")) {
     return new_node(ND_SUB, new_node_num(0), term());
   }
   return term();
@@ -205,9 +209,9 @@ Node* unaly() {
 
 Node* term() {
   // 次のトークンが"("なら、"(" expr ")" のはず
-  if (consume('(')) {
+  if (consume("(")) {
     Node* node = expr();
-    consume(')');
+    consume(")");
     return node;
   }
 
