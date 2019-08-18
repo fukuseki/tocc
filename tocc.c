@@ -112,7 +112,8 @@ Token* tokenize(char* p) {
     }
 
     // 2文字の演算子
-    if (memcmp(p, "==", 2) == 0 || memcmp(p, "!=", 2) == 0) {
+    if (memcmp(p, "==", 2) == 0 || memcmp(p, "!=", 2) == 0 ||
+        memcmp(p, "<=", 2) == 0) {
       cur = new_token(TK_RESERVED, cur, p);
       p += 2;
       cur->len = 2;
@@ -149,6 +150,7 @@ typedef enum {
   ND_EQ,   // ==
   ND_NE,   // !=
   ND_LT,   // <
+  ND_LE,   // <=
   ND_NUM,  // 整数
 } NodeKind;
 
@@ -208,6 +210,8 @@ Node* relational() {
   for (;;) {
     if (consume("<")) {
       node = new_node(ND_LT, node, add());
+    } else if (consume("<=")) {
+      node = new_node(ND_LE, node, add());
     } else {
       return node;
     }
@@ -302,6 +306,11 @@ void gen(Node* node) {
     case ND_LT:
       printf("  cmp rax, rdi\n");
       printf("  setl al\n");
+      printf("  movzb rax, al\n");
+      break;
+    case ND_LE:
+      printf("  cmp rax, rdi\n");
+      printf("  setle al\n");
       printf("  movzb rax, al\n");
       break;
     default:
