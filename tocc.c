@@ -111,6 +111,15 @@ Token* tokenize(char* p) {
       continue;
     }
 
+    // 2文字の演算子
+    if (memcmp(p, "==", 2) == 0) {
+      cur = new_token(TK_RESERVED, cur, p);
+      p += 2;
+      cur->len = 2;
+      continue;
+    }
+
+    // 1文字の演算子
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')') {
       cur = new_token(TK_RESERVED, cur, p++);
@@ -137,6 +146,7 @@ typedef enum {
   ND_SUB,  // -
   ND_MUL,  // *
   ND_DIV,  // /
+  ND_EQ,   // ==
   ND_NUM,  // 整数
 } NodeKind;
 
@@ -165,17 +175,30 @@ Node* new_node_num(int val) {
   return node;
 }
 
+Node* equality();
 Node* add();
 Node* mul();
 Node* unaly();
 Node* term();
 
 Node* expr() {
-  return add();
+  return equality();
+}
+
+Node* equality() {
+  Node* node = add();
+
+  for (;;) {
+    if (consume("==")) {
+      node = new_node(ND_EQ, node, add());
+    } else {
+      return node;
+    }
+  }
 }
 
 Node* add() {
-  Node* node = mul(0);
+  Node* node = mul();
 
   for (;;) {
     if (consume("+")) {
@@ -248,6 +271,11 @@ void gen(Node* node) {
     case ND_DIV:
       printf("  cqo\n");
       printf("  idiv rdi\n");
+      break;
+    case ND_EQ:
+      printf("  cmp rax, rdi\n");
+      printf("  sete al\n");
+      printf("  movzb rax, al\n");
       break;
     default:
       error("予期しないkind=%d", node->kind);
