@@ -24,6 +24,7 @@ void error_at(char* loc, char* fmt, ...) {
 // トークンの種別
 typedef enum {
   TK_RESERVED,  // 記号
+  TK_IDENT,     // 識別子
   TK_NUM,       // 整数トークン
   TK_EOF,       // 入力の終わりを表すトークン
 } TokenKind;
@@ -51,6 +52,15 @@ bool consume(char* op) {
   }
   token = token->next;
   return true;
+}
+
+Token* consume_ident() {
+  if (token->kind != TK_IDENT) {
+    return NULL;
+  }
+  Token* cur = token;
+  token = token->next;
+  return cur;
 }
 
 // 次のトークンが期待している記号のときには、トークンを1つ読み進める。
@@ -100,7 +110,7 @@ Token* tokenize(char* p) {
       continue;
     }
 
-    // 2文字の演算子
+    // 2文字の記号
     if (memcmp(p, "==", 2) == 0 || memcmp(p, "!=", 2) == 0 ||
         memcmp(p, "<=", 2) == 0 || memcmp(p, ">=", 2) == 0) {
       cur = new_token(TK_RESERVED, cur, p);
@@ -109,10 +119,17 @@ Token* tokenize(char* p) {
       continue;
     }
 
-    // 1文字の演算子
+    // 1文字の記号
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
         *p == ')' || *p == '<' || *p == '>') {
       cur = new_token(TK_RESERVED, cur, p++);
+      cur->len = 1;
+      continue;
+    }
+
+    // 識別子
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++);
       cur->len = 1;
       continue;
     }
@@ -145,15 +162,43 @@ Node* new_node_num(int val) {
   return node;
 }
 
+Node* stmt();
+Node* expr();
+Node* assign();
 Node* equality();
 Node* relational();
 Node* add();
 Node* mul();
 Node* unaly();
-Node* term();
+Node* primary();
+
+Node* code[100];
+
+void program() {
+  int i = 0;
+  while (!at_eof()) {
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+}
+
+Node* stmt() {
+  Node* node = expr();
+  expect(";");
+  return node;
+}
 
 Node* expr() {
-  return equality();
+  return assign();
+}
+
+Node* assign() {
+  Node* node = equality();
+
+  if (consume("=")) {
+    node = new_node(ND_ASSIGN, node, assign());
+  }
+  return node;
 }
 
 Node* equality() {
@@ -218,19 +263,27 @@ Node* mul() {
 
 Node* unaly() {
   if (consume("+")) {
-    return term();
+    return primary();
   }
   if (consume("-")) {
-    return new_node(ND_SUB, new_node_num(0), term());
+    return new_node(ND_SUB, new_node_num(0), primary());
   }
-  return term();
+  return primary();
 }
 
-Node* term() {
+Node* primary() {
   // 次のトークンが"("なら、"(" expr ")" のはず
   if (consume("(")) {
     Node* node = expr();
     consume(")");
+    return node;
+  }
+
+  Token* tok = consume_ident();
+  if (tok) {
+    Node* node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->offset = (tok->str[0] - 'a' + 1) * 8;
     return node;
   }
 
