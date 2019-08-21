@@ -10,7 +10,7 @@ extern Token* token;
 bool consume(char* op);
 void expect(char* op);
 int expect_number();
-Token* tokenize(char* p);
+Token* tokenize();
 
 // 抽象構文木のノードの種類
 typedef enum {
@@ -40,6 +40,5 @@ struct Node {
 
 extern Node* code[100];
 void program();
-Node* expr();
 
 void gen(Node* node);

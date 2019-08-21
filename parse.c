@@ -98,7 +98,8 @@ Token* new_token(TokenKind kind, Token* cur, char* str) {
 }
 
 // 入力文字列pをトークナイズしてそれを返す
-Token* tokenize(char* p) {
+Token* tokenize() {
+  char* p = user_input;
   Token head;
   head.next = NULL;
   Token* cur = &head;
@@ -120,8 +121,7 @@ Token* tokenize(char* p) {
     }
 
     // 1文字の記号
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<' || *p == '>') {
+    if (strchr("+-*/()<>=;", *p)) {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
       continue;
