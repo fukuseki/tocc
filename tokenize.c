@@ -119,9 +119,15 @@ Token* tokenize() {
     }
 
     // 識別子
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++);
-      cur->len = 1;
+    if (isalpha(*p)) {
+      cur = new_token(TK_IDENT, cur, p);
+      int len = 1;
+      // 2文字目以降は英数字
+      while (isalnum(p[len])) {
+        len++;
+      }
+      cur->len = len;
+      p += len;
       continue;
     }
 

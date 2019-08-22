@@ -2,6 +2,28 @@
 #include <string.h>
 #include "tocc.h"
 
+typedef struct LVar LVar;
+
+// ローカル変数の型
+struct LVar {
+  LVar* next;
+  char* name;
+  int len;
+  int offset;
+};
+
+// ローカル変数
+LVar* locals;
+
+LVar* find_lvar(Token* tok) {
+  for (LVar* var = locals; var; var = var->next) {
+    if (var->len == tok->len && !strncmp(var->name, tok->str, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
 Node* new_node(NodeKind kind, Node* lhs, Node* rhs) {
   Node* node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -138,7 +160,23 @@ Node* primary() {
   if (tok) {
     Node* node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-    node->offset = (tok->str[0] - 'a' + 1) * 8;
+
+    LVar* lvar = find_lvar(tok);
+    if (lvar) {
+      node->offset = lvar->offset;
+    } else {
+      lvar = calloc(1, sizeof(LVar));
+      lvar->next = locals;
+      lvar->name = tok->str;
+      lvar->len = tok->len;
+      if (locals) {
+        lvar->offset = locals->offset + 8;
+      } else {
+        lvar->offset = 8;
+      }
+      node->offset = lvar->offset;
+      locals = lvar;
+    }
     return node;
   }
 

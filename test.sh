@@ -52,5 +52,6 @@ try 1 "5>=5;"
 try 0 "5>=6;"
 try 3 "a=1; a+2;"
 try 7 "a=b=2; z=3; a+b+z;"
+try 5 "foo=2; bar=3; foo+bar;"
 
 echo OK
