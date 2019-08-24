@@ -59,16 +59,26 @@ void program() {
   code[i] = NULL;
 }
 
+// ラベルの通し番号
+int label_number;
+
 Node* stmt() {
   Node* node;
 
   if (consume("return")) {
     node = new_node(ND_RETURN, expr(), NULL);
+    expect(";");
+  } else if (consume("if")) {
+    expect("(");
+    node = new_node(ND_IF, expr(), NULL);
+    node->label = label_number++;
+    expect(")");
+    node->rhs = stmt();
   } else {
     node = expr();
+    expect(";");
   }
 
-  expect(";");
   return node;
 }
 

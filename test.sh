@@ -55,5 +55,8 @@ try 7 "a=b=2; z=3; a+b+z;"
 try 5 "foo=2; bar=3; foo+bar;"
 try 1 "return 1;"
 try 4 "a=b_=2; return a+b_;"
+try 1 "return 1; 2;"
+try 3 "a=2; if(1) a=a+1; return a;"
+try 2 "a=2; if(0) a=a+1; return a;"
 
 echo OK

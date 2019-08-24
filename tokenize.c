@@ -96,6 +96,23 @@ Token* new_token(TokenKind kind, Token* cur, char* str) {
   return tok;
 }
 
+// 予約語が含まれるか検索する
+// 含まれる場合はヒットした予約語を返す
+const char* find_reserved(char* p) {
+  const char* reserved_words[] = {
+      "return",
+      "if",
+  };
+
+  for (int i = 0; i < sizeof(reserved_words) / sizeof(reserved_words[0]); i++) {
+    int len = strlen(reserved_words[i]);
+    if (strncmp(p, reserved_words[i], len) == 0 && !is_alnum(p[len])) {
+      return reserved_words[i];
+    }
+  }
+  return NULL;
+}
+
 // 入力文字列pをトークナイズしてそれを返す
 Token* tokenize() {
   char* p = user_input;
@@ -110,10 +127,13 @@ Token* tokenize() {
       continue;
     }
 
-    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+    // 予約語
+    const char* reserved = find_reserved(p);
+    if (reserved) {
+      int len = strlen(reserved);
       cur = new_token(TK_RESERVED, cur, p);
-      p += 6;
-      cur->len = 6;
+      p += len;
+      cur->len = len;
       continue;
     }
 
