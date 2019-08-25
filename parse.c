@@ -77,6 +77,12 @@ Node* stmt() {
     if (consume("else")) {
       node->else_stmt = stmt();
     }
+  } else if (consume("while")) {
+    expect("(");
+    node = new_node(ND_WHILE, expr(), NULL);
+    node->label = label_number++;
+    expect(")");
+    node->rhs = stmt();
   } else {
     node = expr();
     expect(";");

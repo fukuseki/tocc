@@ -103,6 +103,7 @@ const char* find_reserved(char* p) {
       "return",
       "if",
       "else",
+      "while",
   };
 
   for (int i = 0; i < sizeof(reserved_words) / sizeof(reserved_words[0]); i++) {

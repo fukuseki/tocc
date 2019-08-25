@@ -45,6 +45,7 @@ typedef enum {
   ND_ASSIGN,  // =
   ND_RETURN,  // return
   ND_IF,      // if
+  ND_WHILE,   // while
   ND_LVAR,    // ローカル変数
   ND_NUM,     // 整数
 } NodeKind;
@@ -58,7 +59,7 @@ struct Node {
   Node* rhs;        // 右辺
   int val;          // kindがND_NUMの場合のみ使う
   int offset;       // kindがND_LVARの場合のみ使う
-  int label;        // kindがND_IFの場合のみ使う
+  int label;        // kindがND_IF,ND_WHILEの場合のみ使う
   Node* else_stmt;  // kindがND_IFの場合のみ使う
 };
 
