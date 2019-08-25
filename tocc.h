@@ -46,6 +46,7 @@ typedef enum {
   ND_RETURN,  // return
   ND_IF,      // if
   ND_WHILE,   // while
+  ND_FOR,     // for
   ND_LVAR,    // ローカル変数
   ND_NUM,     // 整数
 } NodeKind;
@@ -54,13 +55,15 @@ typedef struct Node Node;
 
 // 抽象構文木のノードの型
 struct Node {
-  NodeKind kind;    // ノードの種類
-  Node* lhs;        // 左辺
-  Node* rhs;        // 右辺
-  int val;          // kindがND_NUMの場合のみ使う
-  int offset;       // kindがND_LVARの場合のみ使う
-  int label;        // kindがND_IF,ND_WHILEの場合のみ使う
-  Node* else_stmt;  // kindがND_IFの場合のみ使う
+  NodeKind kind;       // ノードの種類
+  Node* lhs;           // 左辺
+  Node* rhs;           // 右辺
+  int val;             // kindがND_NUMの場合のみ使う
+  int offset;          // kindがND_LVARの場合のみ使う
+  int label;           // kindがND_IF,ND_WHILE,ND_FORの場合のみ使う
+  Node* else_stmt;     // kindがND_IFの場合のみ使う
+  Node* post_expr;     // kindがND_FORの場合のみ使う
+  Node* content_stmt;  // kindがND_FORの場合のみ使う
 };
 
 extern Node* code[100];

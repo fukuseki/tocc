@@ -83,6 +83,16 @@ Node* stmt() {
     node->label = label_number++;
     expect(")");
     node->rhs = stmt();
+  } else if (consume("for")) {
+    expect("(");
+    node = new_node(ND_FOR, expr(), NULL);
+    node->label = label_number++;
+    expect(";");
+    node->rhs = expr();
+    expect(";");
+    node->post_expr = expr();
+    expect(")");
+    node->content_stmt = stmt();
   } else {
     node = expr();
     expect(";");
