@@ -53,12 +53,13 @@ typedef struct Node Node;
 
 // 抽象構文木のノードの型
 struct Node {
-  NodeKind kind;  // ノードの種類
-  Node* lhs;      // 左辺
-  Node* rhs;      // 右辺
-  int val;        // kindがND_NUMの場合のみ使う
-  int offset;     // kindがND_LVARの場合のみ使う
-  int label;      // kindがND_IFの場合のみ使う
+  NodeKind kind;    // ノードの種類
+  Node* lhs;        // 左辺
+  Node* rhs;        // 右辺
+  int val;          // kindがND_NUMの場合のみ使う
+  int offset;       // kindがND_LVARの場合のみ使う
+  int label;        // kindがND_IFの場合のみ使う
+  Node* else_stmt;  // kindがND_IFの場合のみ使う
 };
 
 extern Node* code[100];

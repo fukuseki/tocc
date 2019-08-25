@@ -74,6 +74,9 @@ Node* stmt() {
     node->label = label_number++;
     expect(")");
     node->rhs = stmt();
+    if (consume("else")) {
+      node->else_stmt = stmt();
+    }
   } else {
     node = expr();
     expect(";");

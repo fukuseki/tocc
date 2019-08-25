@@ -58,5 +58,7 @@ try 4 "a=b_=2; return a+b_;"
 try 1 "return 1; 2;"
 try 3 "a=2; if(1) a=a+1; return a;"
 try 2 "a=2; if(0) a=a+1; return a;"
+try 3 "a=2; if(1) a=a+1; else a=a-1; return a;"
+try 1 "a=2; if(0) a=a+1; else a=a-1; return a;"
 
 echo OK
