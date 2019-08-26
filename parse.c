@@ -39,6 +39,21 @@ Node* new_node_num(int val) {
   return node;
 }
 
+NodeVector* new_node_vector() {
+  NodeVector* vec = calloc(1, sizeof(NodeVector));
+  vec->capacity = 1;
+  vec->array = calloc(1, sizeof(Node*));
+  return vec;
+}
+
+void add_node(NodeVector* vec, Node* node) {
+  if (vec->size == vec->capacity) {
+    vec->capacity *= 2;
+    vec->array = realloc(vec->array, vec->capacity * sizeof(Node*));
+  }
+  vec->array[vec->size++] = node;
+}
+
 Node* stmt();
 Node* expr();
 Node* assign();
@@ -93,6 +108,12 @@ Node* stmt() {
     node->post_expr = expr();
     expect(")");
     node->content_stmt = stmt();
+  } else if (consume("{")) {
+    node = new_node(ND_BLOCK, NULL, NULL);
+    node->stmts = new_node_vector();
+    while (!consume("}")) {
+      add_node(node->stmts, stmt());
+    }
   } else {
     node = expr();
     expect(";");

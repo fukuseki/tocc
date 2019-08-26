@@ -47,11 +47,13 @@ typedef enum {
   ND_IF,      // if
   ND_WHILE,   // while
   ND_FOR,     // for
+  ND_BLOCK,   // ブロック
   ND_LVAR,    // ローカル変数
   ND_NUM,     // 整数
 } NodeKind;
 
 typedef struct Node Node;
+typedef struct NodeVector NodeVector;
 
 // 抽象構文木のノードの型
 struct Node {
@@ -64,7 +66,16 @@ struct Node {
   Node* else_stmt;     // kindがND_IFの場合のみ使う
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
+  NodeVector* stmts;   // kindがND_BLOCKの場合のみ使う
 };
+
+struct NodeVector {
+  int size;
+  int capacity;
+  Node** array;
+};
+NodeVector* new_node_vector();
+void add_node(NodeVector* vec, Node* node);
 
 extern Node* code[100];
 void program();
