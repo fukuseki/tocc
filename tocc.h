@@ -48,6 +48,7 @@ typedef enum {
   ND_WHILE,   // while
   ND_FOR,     // for
   ND_BLOCK,   // ブロック
+  ND_CALL,    // 関数呼び出し
   ND_LVAR,    // ローカル変数
   ND_NUM,     // 整数
 } NodeKind;
@@ -67,6 +68,8 @@ struct Node {
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
   NodeVector* stmts;   // kindがND_BLOCKの場合のみ使う
+  char* name;          // kindがND_CALLの場合のみ使う
+  int name_len;        // kindがND_CALLの場合のみ使う
 };
 
 struct NodeVector {

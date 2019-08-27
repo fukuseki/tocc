@@ -215,6 +215,13 @@ Node* primary() {
 
   Token* tok = consume_ident();
   if (tok) {
+    if (consume("(")) {
+      Node* node = new_node(ND_CALL, NULL, NULL);
+      node->name = tok->str;
+      node->name_len = tok->len;
+      consume(")");
+      return node;
+    }
     Node* node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
 

@@ -8,7 +8,7 @@ try() {
     echo ./tocc $input compile failed
     exit 1
   fi
-  gcc -g -o tmp tmp.s
+  gcc -g -o tmp tmp.s foo.o
   ./tmp
   actual="$?"
 
@@ -67,5 +67,7 @@ try 6 "a=0; for(i=1;i<3;i=i+1) for(j=0;j<2;j=j+1) a=a+i; return a;"
 try 3 "{a=1; return a+2;}"
 try 3 "if(1){a=1; return a+2;}else{foo=2; bar=3; return foo+bar;}"
 try 5 "if(0){a=1; return a+2;}else{foo=2; bar=3; return foo+bar;}"
+try 42 "foo();"
+try 43 "1+foo();"
 
 echo OK

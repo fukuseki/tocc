@@ -79,6 +79,21 @@ void gen(Node* node) {
         printf("  pop rax\n");
       }
       return;
+    case ND_CALL:
+      // RSPを8の倍数から16の倍数になるように調整
+      printf("  mov rax, rsp\n");
+      printf("  add rax, 8\n");  // 調整値のpush分
+      printf("  and rax, 8\n");
+      printf("  sub rsp, rax\n");
+      printf("  push rax\n");
+
+      printf("  call %.*s\n", node->name_len, node->name);
+      // 調整分を戻す
+      printf("  pop r11\n");
+      printf("  add rsp, r11\n");
+
+      printf("  push rax\n");
+      return;
     default:
       break;
   }
