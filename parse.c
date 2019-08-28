@@ -110,9 +110,9 @@ Node* stmt() {
     node->content_stmt = stmt();
   } else if (consume("{")) {
     node = new_node(ND_BLOCK, NULL, NULL);
-    node->stmts = new_node_vector();
+    node->childs = new_node_vector();
     while (!consume("}")) {
-      add_node(node->stmts, stmt());
+      add_node(node->childs, stmt());
     }
   } else {
     node = expr();
@@ -219,8 +219,16 @@ Node* primary() {
       Node* node = new_node(ND_CALL, NULL, NULL);
       node->name = tok->str;
       node->name_len = tok->len;
-      consume(")");
-      return node;
+      node->childs = new_node_vector();
+      for (;;) {
+        if (consume(")")) {
+          return node;
+        }
+        if (node->childs->size) {
+          expect(",");
+        }
+        add_node(node->childs, expr());
+      }
     }
     Node* node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;

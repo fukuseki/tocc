@@ -69,5 +69,9 @@ try 3 "if(1){a=1; return a+2;}else{foo=2; bar=3; return foo+bar;}"
 try 5 "if(0){a=1; return a+2;}else{foo=2; bar=3; return foo+bar;}"
 try 42 "foo();"
 try 43 "1+foo();"
+try 11 "foo2(1,2);"
+try 12 "foo2(1,2)+1;"
+try 11 "foo6(1,2,3,4,5,6);"
+try 11 "foo2(1,foo6(1,2,3,4,5,6));"
 
 echo OK

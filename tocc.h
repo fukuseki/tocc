@@ -67,7 +67,7 @@ struct Node {
   Node* else_stmt;     // kindがND_IFの場合のみ使う
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
-  NodeVector* stmts;   // kindがND_BLOCKの場合のみ使う
+  NodeVector* childs;  // kindがND_BLOCK,ND_CALLの場合のみ使う
   char* name;          // kindがND_CALLの場合のみ使う
   int name_len;        // kindがND_CALLの場合のみ使う
 };
