@@ -42,6 +42,12 @@ bool is_alnum(char c) {
 // 現在注目しているトークン
 Token* token;
 
+// 次のトークンが期待している記号か
+bool lookahead(char* op) {
+  return (token->kind == TK_RESERVED && strlen(op) == token->len &&
+          !memcmp(token->str, op, token->len));
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char* op) {

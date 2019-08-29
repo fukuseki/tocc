@@ -26,6 +26,7 @@ struct Token {
 extern Token* token;
 bool at_eof();
 
+bool lookahead(char* op);
 bool consume(char* op);
 Token* consume_ident();
 void expect(char* op);
@@ -34,23 +35,24 @@ Token* tokenize();
 
 // 抽象構文木のノードの種類
 typedef enum {
-  ND_ADD,     // +
-  ND_SUB,     // -
-  ND_MUL,     // *
-  ND_DIV,     // /
-  ND_EQ,      // ==
-  ND_NE,      // !=
-  ND_LT,      // <
-  ND_LE,      // <=
-  ND_ASSIGN,  // =
-  ND_RETURN,  // return
-  ND_IF,      // if
-  ND_WHILE,   // while
-  ND_FOR,     // for
-  ND_BLOCK,   // ブロック
-  ND_CALL,    // 関数呼び出し
-  ND_LVAR,    // ローカル変数
-  ND_NUM,     // 整数
+  ND_ADD,       // +
+  ND_SUB,       // -
+  ND_MUL,       // *
+  ND_DIV,       // /
+  ND_EQ,        // ==
+  ND_NE,        // !=
+  ND_LT,        // <
+  ND_LE,        // <=
+  ND_ASSIGN,    // =
+  ND_RETURN,    // return
+  ND_IF,        // if
+  ND_WHILE,     // while
+  ND_FOR,       // for
+  ND_BLOCK,     // ブロック
+  ND_CALL,      // 関数呼び出し
+  ND_FUNCTION,  // 関数定義
+  ND_LVAR,      // ローカル変数
+  ND_NUM,       // 整数
 } NodeKind;
 
 typedef struct Node Node;
@@ -67,7 +69,7 @@ struct Node {
   Node* else_stmt;     // kindがND_IFの場合のみ使う
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
-  NodeVector* childs;  // kindがND_BLOCK,ND_CALLの場合のみ使う
+  NodeVector* childs;  // kindがND_BLOCK,ND_CALL,ND_FUNCTIONの場合のみ使う
   char* name;          // kindがND_CALLの場合のみ使う
   int name_len;        // kindがND_CALLの場合のみ使う
 };

@@ -24,6 +24,24 @@ LVar* find_lvar(Token* tok) {
   return NULL;
 }
 
+LVar* new_lvar(Token* tok) {
+  LVar* lvar = find_lvar(tok);
+  if (lvar) {
+    return lvar;
+  }
+  lvar = calloc(1, sizeof(LVar));
+  lvar->next = locals;
+  lvar->name = tok->str;
+  lvar->len = tok->len;
+  if (locals) {
+    lvar->offset = locals->offset + 8;
+  } else {
+    lvar->offset = 8;
+  }
+  locals = lvar;
+  return lvar;
+}
+
 Node* new_node(NodeKind kind, Node* lhs, Node* rhs) {
   Node* node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -54,6 +72,7 @@ void add_node(NodeVector* vec, Node* node) {
   vec->array[vec->size++] = node;
 }
 
+Node* function();
 Node* stmt();
 Node* expr();
 Node* assign();
@@ -69,13 +88,39 @@ Node* code[100];
 void program() {
   int i = 0;
   while (!at_eof()) {
-    code[i++] = stmt();
+    code[i++] = function();
   }
   code[i] = NULL;
 }
 
 // ラベルの通し番号
 int label_number;
+
+Node* block() {
+  expect("{");
+  Node* node = new_node(ND_BLOCK, NULL, NULL);
+  node->childs = new_node_vector();
+  while (!consume("}")) {
+    add_node(node->childs, stmt());
+  }
+  return node;
+}
+
+Node* function() {
+  Token* tok = consume_ident();
+  if (!tok) {
+    error("関数名がありません");
+  }
+  expect("(");
+  Node* node = new_node(ND_FUNCTION, NULL, NULL);
+  node->name = tok->str;
+  node->name_len = tok->len;
+  node->childs = new_node_vector();
+  // todo 引数
+  expect(")");
+  node->lhs = block();
+  return node;
+}
 
 Node* stmt() {
   Node* node;
@@ -108,12 +153,8 @@ Node* stmt() {
     node->post_expr = expr();
     expect(")");
     node->content_stmt = stmt();
-  } else if (consume("{")) {
-    node = new_node(ND_BLOCK, NULL, NULL);
-    node->childs = new_node_vector();
-    while (!consume("}")) {
-      add_node(node->childs, stmt());
-    }
+  } else if (lookahead("{")) {
+    node = block();
   } else {
     node = expr();
     expect(";");
@@ -215,6 +256,7 @@ Node* primary() {
 
   Token* tok = consume_ident();
   if (tok) {
+    // 関数呼び出し
     if (consume("(")) {
       Node* node = new_node(ND_CALL, NULL, NULL);
       node->name = tok->str;
@@ -230,25 +272,12 @@ Node* primary() {
         add_node(node->childs, expr());
       }
     }
+
+    // 左辺値(変数)
     Node* node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
-
-    LVar* lvar = find_lvar(tok);
-    if (lvar) {
-      node->offset = lvar->offset;
-    } else {
-      lvar = calloc(1, sizeof(LVar));
-      lvar->next = locals;
-      lvar->name = tok->str;
-      lvar->len = tok->len;
-      if (locals) {
-        lvar->offset = locals->offset + 8;
-      } else {
-        lvar->offset = 8;
-      }
-      node->offset = lvar->offset;
-      locals = lvar;
-    }
+    LVar* lvar = new_lvar(tok);
+    node->offset = lvar->offset;
     return node;
   }
 
