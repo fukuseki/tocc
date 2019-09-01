@@ -21,6 +21,40 @@ void gen(Node* node) {
       printf("  mov rbp, rsp\n");
       printf("  sub rsp, 208\n");
 
+      // 引数
+      for (int i = 0; i < node->childs->size; i++) {
+        gen_lval(node->childs->array[i]);
+      }
+      // 引数をレジスタからスタックへ移動
+      if (7 <= node->childs->size) {
+        error("引数7個以上は未対応です");
+      }
+      if (6 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], r9\n");
+      }
+      if (5 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], r8\n");
+      }
+      if (4 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], rcx\n");
+      }
+      if (3 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], rdx\n");
+      }
+      if (2 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], rsi\n");
+      }
+      if (1 <= node->childs->size) {
+        printf("  pop rax\n");
+        printf("  mov [rax], rdi\n");
+      }
+
+      // 関数の中身
       gen(node->lhs);
 
       // エピローグ

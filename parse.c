@@ -57,6 +57,14 @@ Node* new_node_num(int val) {
   return node;
 }
 
+Node* new_node_lval(Token* tok) {
+  Node* node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+  LVar* lvar = new_lvar(tok);
+  node->offset = lvar->offset;
+  return node;
+}
+
 NodeVector* new_node_vector() {
   NodeVector* vec = calloc(1, sizeof(NodeVector));
   vec->capacity = 1;
@@ -116,8 +124,20 @@ Node* function() {
   node->name = tok->str;
   node->name_len = tok->len;
   node->childs = new_node_vector();
+  for (;;) {
+    if (consume(")")) {
+      break;
+    }
+    if (node->childs->size) {
+      expect(",");
+    }
+    Token* tok = consume_ident();
+    if (!tok) {
+      error("関数の引数が不正です");
+    }
+    add_node(node->childs, new_node_lval(tok));
+  }
   // todo 引数
-  expect(")");
   node->lhs = block();
   return node;
 }
@@ -274,11 +294,7 @@ Node* primary() {
     }
 
     // 左辺値(変数)
-    Node* node = calloc(1, sizeof(Node));
-    node->kind = ND_LVAR;
-    LVar* lvar = new_lvar(tok);
-    node->offset = lvar->offset;
-    return node;
+    return new_node_lval(tok);
   }
 
   return new_node_num(expect_number());

@@ -74,5 +74,8 @@ try 12 "main(){return foo2(1,2)+1;}"
 try 11 "main(){return foo6(1,2,3,4,5,6);}"
 try 11 "main(){return foo2(1,foo6(1,2,3,4,5,6));}"
 try 2 "main(){return hoge();}hoge(){return 2;}"
+try 3 "main(){return hoge(2)+1;}hoge(a){return a;}"
+try 11 "main(){return bar6(1,2,3,4,5,6);}bar6(a,b,c,d,e,f){return foo6(a,b,c,d,e,f);}"
+try 34 "main(){return fib(8);}fib(i){if(i<=1){return 1;}else{return fib(i-2)+fib(i-1);}}"
 
 echo OK
