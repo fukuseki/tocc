@@ -77,5 +77,7 @@ try 2 "main(){return hoge();}hoge(){return 2;}"
 try 3 "main(){return hoge(2)+1;}hoge(a){return a;}"
 try 11 "main(){return bar6(1,2,3,4,5,6);}bar6(a,b,c,d,e,f){return foo6(a,b,c,d,e,f);}"
 try 34 "main(){return fib(8);}fib(i){if(i<=1){return 1;}else{return fib(i-2)+fib(i-1);}}"
+try 3 "main(){x=3;y=&x;return *y;}"
+try 3 "main(){x=3;y=5;z=&y + 8;return *z;}" #本テストはスタック変数の配置に依存
 
 echo OK

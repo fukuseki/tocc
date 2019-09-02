@@ -263,6 +263,12 @@ Node* unaly() {
   if (consume("-")) {
     return new_node(ND_SUB, new_node_num(0), primary());
   }
+  if (consume("&")) {
+    return new_node(ND_ADDR, unaly(), NULL);
+  }
+  if (consume("*")) {
+    return new_node(ND_DEREF, unaly(), NULL);
+  }
   return primary();
 }
 
