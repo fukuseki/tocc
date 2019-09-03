@@ -24,10 +24,11 @@ LVar* find_lvar(Token* tok) {
   return NULL;
 }
 
-LVar* new_lvar(Token* tok) {
+void add_lvar(Token* tok) {
   LVar* lvar = find_lvar(tok);
   if (lvar) {
-    return lvar;
+    error_at(tok->str, "変数 %.*s はすでに宣言されています", tok->len,
+             tok->str);
   }
   lvar = calloc(1, sizeof(LVar));
   lvar->next = locals;
@@ -39,7 +40,6 @@ LVar* new_lvar(Token* tok) {
     lvar->offset = 8;
   }
   locals = lvar;
-  return lvar;
 }
 
 Node* new_node(NodeKind kind, Node* lhs, Node* rhs) {
@@ -60,7 +60,10 @@ Node* new_node_num(int val) {
 Node* new_node_lval(Token* tok) {
   Node* node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
-  LVar* lvar = new_lvar(tok);
+  LVar* lvar = find_lvar(tok);
+  if (!lvar) {
+    error_at(tok->str, "変数 %.*s は宣言されていません", tok->len, tok->str);
+  }
   node->offset = lvar->offset;
   return node;
 }
@@ -115,6 +118,7 @@ Node* block() {
 }
 
 Node* function() {
+  expect("int");
   Token* tok = consume_ident();
   if (!tok) {
     error("関数名がありません");
@@ -131,10 +135,12 @@ Node* function() {
     if (node->childs->size) {
       expect(",");
     }
+    expect("int");
     Token* tok = consume_ident();
     if (!tok) {
       error("関数の引数が不正です");
     }
+    add_lvar(tok);
     add_node(node->childs, new_node_lval(tok));
   }
   // todo 引数
@@ -173,6 +179,11 @@ Node* stmt() {
     node->post_expr = expr();
     expect(")");
     node->content_stmt = stmt();
+  } else if (consume("int")) {
+    // 変数宣言
+    add_lvar(consume_ident());
+    expect(";");
+    node = stmt();
   } else if (lookahead("{")) {
     node = block();
   } else {

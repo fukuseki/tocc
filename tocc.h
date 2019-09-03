@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 void error(char* fmt, ...);
+void error_at(char* loc, char* fmt, ...);
 extern char* user_input;
 
 // トークンの種別

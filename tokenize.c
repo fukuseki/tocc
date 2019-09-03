@@ -106,7 +106,7 @@ Token* new_token(TokenKind kind, Token* cur, char* str) {
 // 含まれる場合はヒットした予約語を返す
 const char* find_reserved(char* p) {
   const char* reserved_words[] = {
-      "return", "if", "else", "while", "for",
+      "return", "if", "else", "while", "for", "int",
   };
 
   for (int i = 0; i < sizeof(reserved_words) / sizeof(reserved_words[0]); i++) {
