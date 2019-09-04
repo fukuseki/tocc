@@ -34,6 +34,12 @@ void expect(char* op);
 int expect_number();
 Token* tokenize();
 
+typedef struct Type Type;
+struct Type {
+  enum Ty { INT, PTR } ty;
+  Type* ptr_to;
+};
+
 // 抽象構文木のノードの種類
 typedef enum {
   ND_ADD,       // +
