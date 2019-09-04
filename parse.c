@@ -196,7 +196,11 @@ Node* stmt() {
     node->content_stmt = stmt();
   } else if (consume("int")) {
     // 変数宣言
-    add_lvar(consume_ident(), new_type(INT));
+    Type* type = new_type(INT);
+    while (consume("*")) {
+      type = new_ptr_type(type);
+    }
+    add_lvar(consume_ident(), type);
     expect(";");
     node = stmt();
   } else if (lookahead("{")) {
