@@ -125,6 +125,8 @@ void gen(Node* node) {
       return;
     case ND_FOR:
       gen(node->lhs);
+      printf("  pop rax\n");  // スタックに式の値が残っている
+
       printf(".Lbegin%d:\n", node->label);
       gen(node->rhs);
       printf("  pop rax\n");
@@ -132,6 +134,8 @@ void gen(Node* node) {
       printf("  je .Lend%d\n", node->label);
       gen(node->content_stmt);
       gen(node->post_expr);
+      printf("  pop rax\n");  // スタックに式の値が残っている
+
       printf("  jmp .Lbegin%d\n", node->label);
       printf(".Lend%d:\n", node->label);
       return;

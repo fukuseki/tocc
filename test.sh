@@ -80,5 +80,6 @@ try 34 "int main(){return fib(8);}int fib(int i){if(i<=1){return 1;}else{return 
 try 3 "int main(){int x;int y;x=3;y=&x;return *y;}"
 try 3 "int main(){int x;int y;int z;x=3;y=5;z=&y + 8;return *z;}" #本テストはスタック変数の配置に依存
 try 3 "int main(){int x; int *y; y=&x; *y=3; return x;}"
+try 3 "int main(){int i;for(i=0;i<10000000;i=i+1){}return 3;}"
 
 echo OK
