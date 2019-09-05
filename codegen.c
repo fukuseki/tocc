@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tocc.h"
 
+// 左辺値のアドレスをスタックに1個積む
 void gen_lval(Node* node) {
   if (node->kind != ND_LVAR) {
     error("代入の左辺値が変数ではありません");
@@ -23,9 +24,10 @@ void gen(Node* node) {
 
       // 引数
       for (int i = 0; i < node->childs->size; i++) {
+        // スタックの引数のアドレスを引数の個数分スタックに積む
         gen_lval(node->childs->array[i]);
       }
-      // 引数をレジスタからスタックへ移動
+      // 引数をレジスタから変数へ移動
       if (7 <= node->childs->size) {
         error("引数7個以上は未対応です");
       }
@@ -58,27 +60,31 @@ void gen(Node* node) {
       gen(node->lhs);
 
       // エピローグ
-      // 最後の式の結果がRAXに残っているのでそれが返り値になる
-      printf("  mov rsp, rbp\n");
-      printf("  pop rbp\n");
+      // 今はreturn文があるから来ない.
       printf("  ret\n");
     case ND_NUM:
+      // 数値を1個スタックに積む
       printf("  push %d\n", node->val);
       return;
     case ND_LVAR:
+      // 変数の値をスタックに積む
       gen_lval(node);
       printf("  pop rax\n");
       printf("  mov rax, [rax]\n");
       printf("  push rax\n");
       return;
     case ND_ASSIGN:
+      // 左辺(代入先)のアドレスをスタックに積む
       if (node->lhs->kind == ND_DEREF) {
+        // DEREF対象の変数が目的(代入先)のアドレス
         gen(node->lhs->lhs);
       } else {
         gen_lval(node->lhs);
       }
+      // 右辺のアドレスをスタックに積む
       gen(node->rhs);
 
+      // 代入実行
       printf("  pop rdi\n");
       printf("  pop rax\n");
       printf("  mov [rax], rdi\n");
@@ -94,20 +100,26 @@ void gen(Node* node) {
       printf("  push rax\n");
       return;
     case ND_RETURN:
+      // 左の値をスタックに積む
       gen(node->lhs);
+      // スタックをraxに詰めてret
       printf("  pop rax\n");
       printf("  mov rsp, rbp\n");
       printf("  pop rbp\n");
       printf("  ret\n");
       return;
     case ND_IF:
+      // 条件式の結果をスタックに積む
       gen(node->lhs);
+      // 分岐
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
       printf("  je .Lelse%d\n", node->label);
+      // then
       gen(node->rhs);
       printf("  jmp .Lend%d\n", node->label);
       printf(".Lelse%d:\n", node->label);
+      // else
       if (node->else_stmt) {
         gen(node->else_stmt);
       }
@@ -115,24 +127,32 @@ void gen(Node* node) {
       return;
     case ND_WHILE:
       printf(".Lbegin%d:\n", node->label);
+      // 条件式の結果をスタックに積む
       gen(node->lhs);
+      // 分岐
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%d\n", node->label);
+      // ループの中身
       gen(node->rhs);
       printf("  jmp .Lbegin%d\n", node->label);
       printf(".Lend%d:\n", node->label);
       return;
     case ND_FOR:
+      // 初期化式
       gen(node->lhs);
       printf("  pop rax\n");  // スタックに式の値が残っている
 
       printf(".Lbegin%d:\n", node->label);
+      // 条件式の結果をスタックに積む
       gen(node->rhs);
+      // 分岐
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%d\n", node->label);
+      // 中身
       gen(node->content_stmt);
+      // 後処理(forの3項目)
       gen(node->post_expr);
       printf("  pop rax\n");  // スタックに式の値が残っている
 
@@ -193,9 +213,11 @@ void gen(Node* node) {
   }
 
   // 2項演算子いろいろ
+  // 左辺と右辺をそれぞれスタックに積む
   gen(node->lhs);
   gen(node->rhs);
 
+  // 2項演算子はスタックから2個値(左辺と右辺)をpopし、結果を1個pushする
   printf("  pop rdi\n");
   printf("  pop rax\n");
 
@@ -236,6 +258,6 @@ void gen(Node* node) {
     default:
       error("予期しないkind=%d", node->kind);
   }
-
+  // 2項演算子の結果をpush
   printf("  push rax\n");
 }
