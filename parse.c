@@ -69,6 +69,7 @@ Node* new_node_num(int val) {
   Node* node = calloc(1, sizeof(Node));
   node->kind = ND_NUM;
   node->val = val;
+  node->type = new_type(INT);
   return node;
 }
 
@@ -80,6 +81,7 @@ Node* new_node_lval(Token* tok) {
     error_at(tok->str, "変数 %.*s は宣言されていません", tok->len, tok->str);
   }
   node->offset = lvar->offset;
+  node->type = lvar->type;
   return node;
 }
 
@@ -158,7 +160,6 @@ Node* function() {
     add_lvar(tok, new_type(INT));
     add_node(node->childs, new_node_lval(tok));
   }
-  // todo 引数
   node->lhs = block();
   return node;
 }
@@ -222,6 +223,7 @@ Node* assign() {
 
   if (consume("=")) {
     node = new_node(ND_ASSIGN, node, assign());
+    node->type = node->lhs->type;
   }
   return node;
 }
@@ -232,8 +234,10 @@ Node* equality() {
   for (;;) {
     if (consume("==")) {
       node = new_node(ND_EQ, node, relational());
+      node->type = new_type(INT);
     } else if (consume("!=")) {
       node = new_node(ND_NE, node, relational());
+      node->type = new_type(INT);
     } else {
       return node;
     }
@@ -246,15 +250,27 @@ Node* relational() {
   for (;;) {
     if (consume("<")) {
       node = new_node(ND_LT, node, add());
+      node->type = new_type(INT);
     } else if (consume("<=")) {
       node = new_node(ND_LE, node, add());
+      node->type = new_type(INT);
     } else if (consume(">")) {
       node = new_node(ND_LT, add(), node);
+      node->type = new_type(INT);
     } else if (consume(">=")) {
       node = new_node(ND_LE, add(), node);
+      node->type = new_type(INT);
     } else {
       return node;
     }
+  }
+}
+
+int get_type_size(Type* type) {
+  if (type->ty == INT) {
+    return 4;
+  } else {
+    return 8;
   }
 }
 
@@ -263,9 +279,35 @@ Node* add() {
 
   for (;;) {
     if (consume("+")) {
-      node = new_node(ND_ADD, node, mul());
+      Node* rhs = mul();
+      Type* type = node->type;
+      if (node->type->ty == PTR) {
+        // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
+        int size = get_type_size(type->ptr_to);
+        rhs = new_node(ND_MUL, new_node_num(size), rhs);
+      } else if (rhs->type->ty == PTR) {
+        // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
+        type = rhs->type;
+        int size = get_type_size(type->ptr_to);
+        node = new_node(ND_MUL, new_node_num(size), node);
+      }
+      node = new_node(ND_ADD, node, rhs);
+      node->type = type;
     } else if (consume("-")) {
-      node = new_node(ND_SUB, node, mul());
+      Node* rhs = mul();
+      Type* type = node->type;
+      if (node->type->ty == PTR) {
+        // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
+        int size = get_type_size(type->ptr_to);
+        rhs = new_node(ND_MUL, new_node_num(size), rhs);
+      } else if (rhs->type->ty == PTR) {
+        // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
+        type = rhs->type;
+        int size = get_type_size(type->ptr_to);
+        node = new_node(ND_MUL, new_node_num(size), node);
+      }
+      node = new_node(ND_SUB, node, rhs);
+      node->type = type;
     } else {
       return node;
     }
@@ -278,8 +320,10 @@ Node* mul() {
   for (;;) {
     if (consume("*")) {
       node = new_node(ND_MUL, node, unaly());
+      node->type = new_type(INT);
     } else if (consume("/")) {
       node = new_node(ND_DIV, node, unaly());
+      node->type = new_type(INT);
     } else {
       return node;
     }
@@ -291,13 +335,25 @@ Node* unaly() {
     return primary();
   }
   if (consume("-")) {
-    return new_node(ND_SUB, new_node_num(0), primary());
+    Node* node = primary();
+    Type* type = node->type;
+    node = new_node(ND_SUB, new_node_num(0), node);
+    node->type = type;
+    return node;
   }
   if (consume("&")) {
-    return new_node(ND_ADDR, unaly(), NULL);
+    Node* node = unaly();
+    Type* type = new_ptr_type(node->type);
+    node = new_node(ND_ADDR, node, NULL);
+    node->type = type;
+    return node;
   }
   if (consume("*")) {
-    return new_node(ND_DEREF, unaly(), NULL);
+    Node* node = unaly();
+    Type* type = node->type->ptr_to;
+    node = new_node(ND_DEREF, node, NULL);
+    node->type = type;
+    return node;
   }
   return primary();
 }
@@ -315,6 +371,8 @@ Node* primary() {
     // 関数呼び出し
     if (consume("(")) {
       Node* node = new_node(ND_CALL, NULL, NULL);
+      // TODO 関数の本当の返り値の型をtypeに設定する
+      node->type = new_type(INT);
       node->name = tok->str;
       node->name_len = tok->len;
       node->childs = new_node_vector();

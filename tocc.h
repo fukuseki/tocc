@@ -81,6 +81,7 @@ struct Node {
   NodeVector* childs;  // kindがND_BLOCK,ND_CALL,ND_FUNCTIONの場合のみ使う
   char* name;          // kindがND_CALLの場合のみ使う
   int name_len;        // kindがND_CALLの場合のみ使う
+  Type* type;          // 型
 };
 
 struct NodeVector {

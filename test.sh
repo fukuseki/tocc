@@ -78,8 +78,19 @@ try 3 "int main(){return hoge(2)+1;}int hoge(int a){return a;}"
 try 11 "int main(){return bar6(1,2,3,4,5,6);}int bar6(int a,int b,int c,int d,int e,int f){return foo6(a,b,c,d,e,f);}"
 try 34 "int main(){return fib(8);}int fib(int i){if(i<=1){return 1;}else{return fib(i-2)+fib(i-1);}}"
 try 3 "int main(){int x;int y;x=3;y=&x;return *y;}"
-try 3 "int main(){int x;int y;int z;x=3;y=5;z=&y + 8;return *z;}" #本テストはスタック変数の配置に依存
+try 3 "int main(){int x;int y;int z;x=3;y=5;z=&y + 2;return *z;}" #本テストはスタック変数の配置に依存
 try 3 "int main(){int x; int *y; y=&x; *y=3; return x;}"
 try 3 "int main(){int i;for(i=0;i<10000000;i=i+1){}return 3;}"
+try 1 "int main(){int* p;alloc4(&p,1,2,4,8);return *p;}"
+try 2 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p+1);}"
+try 4 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p+2);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p+3);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p-1+4);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(3+p);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(+3+p);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(-1+p+4);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p+1*3);}"
+try 8 "int main(){int* p;alloc4(&p,1,2,4,8);return *(p+9/3);}"
+try 3 "int main(){int a; int b; a=1; b=3; int** p;alloc2p(&p,&a,&b);return **(p+1);}"
 
 echo OK
