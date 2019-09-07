@@ -355,6 +355,10 @@ Node* unaly() {
     node->type = type;
     return node;
   }
+  if (consume("sizeof")) {
+    Node* arg = unaly();
+    return new_node_num(get_type_size(arg->type));
+  }
   return primary();
 }
 
