@@ -15,6 +15,14 @@ Type* new_ptr_type(Type* ptr_to) {
   return type;
 }
 
+int get_type_size(Type* type) {
+  if (type->ty == INT) {
+    return 4;
+  } else {
+    return 8;
+  }
+}
+
 typedef struct LVar LVar;
 
 // ローカル変数の型
@@ -49,10 +57,11 @@ void add_lvar(Token* tok, Type* type) {
   lvar->name = tok->str;
   lvar->len = tok->len;
   lvar->type = type;
+  int size = get_type_size(type);
   if (locals) {
-    lvar->offset = locals->offset + 8;
+    lvar->offset = locals->offset + size;
   } else {
-    lvar->offset = 8;
+    lvar->offset = size;
   }
   locals = lvar;
 }
@@ -263,14 +272,6 @@ Node* relational() {
     } else {
       return node;
     }
-  }
-}
-
-int get_type_size(Type* type) {
-  if (type->ty == INT) {
-    return 4;
-  } else {
-    return 8;
   }
 }
 

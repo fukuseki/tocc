@@ -22,38 +22,46 @@ void gen(Node* node) {
       printf("  mov rbp, rsp\n");
       printf("  sub rsp, 208\n");
 
-      // 引数
-      for (int i = 0; i < node->childs->size; i++) {
-        // スタックの引数のアドレスを引数の個数分スタックに積む
-        gen_lval(node->childs->array[i]);
-      }
       // 引数をレジスタから変数へ移動
-      if (7 <= node->childs->size) {
-        error("引数7個以上は未対応です");
-      }
-      if (6 <= node->childs->size) {
+      for (int i = 0; i < node->childs->size; i++) {
+        // 左辺(代入先)のアドレスをスタックに積む
+        Node* lhs = node->childs->array[i];
+        gen_lval(lhs);
+        // 右辺の値をスタックに積む
+        gen_lval(node->childs->array[i]);
+        switch (i) {
+          case 0:
+            printf("  push rdi\n");
+            break;
+          case 1:
+            printf("  push rsi\n");
+            break;
+          case 2:
+            printf("  push rdx\n");
+            break;
+          case 3:
+            printf("  push rcx\n");
+            break;
+          case 4:
+            printf("  push r8\n");
+            break;
+          case 5:
+            printf("  push r9\n");
+            break;
+          default:
+            error("引数7個以上は未対応です");
+        }
+        // 代入実行
+        printf("  pop rdi\n");
         printf("  pop rax\n");
-        printf("  mov [rax], r9\n");
-      }
-      if (5 <= node->childs->size) {
-        printf("  pop rax\n");
-        printf("  mov [rax], r8\n");
-      }
-      if (4 <= node->childs->size) {
-        printf("  pop rax\n");
-        printf("  mov [rax], rcx\n");
-      }
-      if (3 <= node->childs->size) {
-        printf("  pop rax\n");
-        printf("  mov [rax], rdx\n");
-      }
-      if (2 <= node->childs->size) {
-        printf("  pop rax\n");
-        printf("  mov [rax], rsi\n");
-      }
-      if (1 <= node->childs->size) {
-        printf("  pop rax\n");
-        printf("  mov [rax], rdi\n");
+        switch (node->childs->array[i]->type->ty) {
+          case INT:
+            printf("  mov DWORD PTR [rax], edi\n");
+            break;
+          case PTR:
+            printf("  mov [rax], rdi\n");
+            break;
+        }
       }
 
       // 関数の中身
@@ -70,7 +78,14 @@ void gen(Node* node) {
       // 変数の値をスタックに積む
       gen_lval(node);
       printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
+      switch (node->type->ty) {
+        case INT:
+          printf("  mov eax, DWORD PTR [rax]\n");
+          break;
+        case PTR:
+          printf("  mov rax, [rax]\n");
+          break;
+      }
       printf("  push rax\n");
       return;
     case ND_ASSIGN:
@@ -81,13 +96,20 @@ void gen(Node* node) {
       } else {
         gen_lval(node->lhs);
       }
-      // 右辺のアドレスをスタックに積む
+      // 右辺の値をスタックに積む
       gen(node->rhs);
 
       // 代入実行
       printf("  pop rdi\n");
       printf("  pop rax\n");
-      printf("  mov [rax], rdi\n");
+      switch (node->lhs->type->ty) {
+        case INT:
+          printf("  mov DWORD PTR [rax], edi\n");
+          break;
+        case PTR:
+          printf("  mov [rax], rdi\n");
+          break;
+      }
       printf("  push rdi\n");
       return;
     case ND_ADDR:
@@ -96,7 +118,14 @@ void gen(Node* node) {
     case ND_DEREF:
       gen(node->lhs);
       printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
+      switch (node->lhs->type->ty) {
+        case INT:
+          printf("  mov eax, DWORD PTR [rax]\n");
+          break;
+        case PTR:
+          printf("  mov rax, [rax]\n");
+          break;
+      }
       printf("  push rax\n");
       return;
     case ND_RETURN:
