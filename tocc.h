@@ -36,8 +36,9 @@ Token* tokenize();
 
 typedef struct Type Type;
 struct Type {
-  enum Ty { INT, PTR } ty;
+  enum Ty { INT, PTR, ARRAY } ty;
   Type* ptr_to;
+  size_t array_size;
 };
 
 // 抽象構文木のノードの種類

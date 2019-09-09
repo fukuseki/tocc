@@ -15,11 +15,25 @@ Type* new_ptr_type(Type* ptr_to) {
   return type;
 }
 
+Type* new_array_type(Type* ptr_to, size_t size) {
+  Type* type = calloc(1, sizeof(Type));
+  type->ty = ARRAY;
+  type->ptr_to = ptr_to;
+  type->array_size = size;
+  return type;
+}
+
 int get_type_size(Type* type) {
-  if (type->ty == INT) {
-    return 4;
-  } else {
-    return 8;
+  switch (type->ty) {
+    case INT:
+      return 4;
+    case PTR:
+      return 8;
+    case ARRAY:
+      return type->array_size * get_type_size(type->ptr_to);
+    default:
+      error("不正なタイプです");
+      return 0;
   }
 }
 
@@ -210,7 +224,12 @@ Node* stmt() {
     while (consume("*")) {
       type = new_ptr_type(type);
     }
-    add_lvar(consume_ident(), type);
+    Token* name = consume_ident();
+    if (consume("[")) {
+      type = new_array_type(type, expect_number());
+      expect("]");
+    }
+    add_lvar(name, type);
     expect(";");
     node = stmt();
   } else if (lookahead("{")) {
@@ -282,11 +301,11 @@ Node* add() {
     if (consume("+")) {
       Node* rhs = mul();
       Type* type = node->type;
-      if (node->type->ty == PTR) {
+      if (node->type->ty == PTR || node->type->ty == ARRAY) {
         // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
         int size = get_type_size(type->ptr_to);
         rhs = new_node(ND_MUL, new_node_num(size), rhs);
-      } else if (rhs->type->ty == PTR) {
+      } else if (rhs->type->ty == PTR || node->type->ty == ARRAY) {
         // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
         type = rhs->type;
         int size = get_type_size(type->ptr_to);
@@ -297,11 +316,11 @@ Node* add() {
     } else if (consume("-")) {
       Node* rhs = mul();
       Type* type = node->type;
-      if (node->type->ty == PTR) {
+      if (node->type->ty == PTR || node->type->ty == ARRAY) {
         // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
         int size = get_type_size(type->ptr_to);
         rhs = new_node(ND_MUL, new_node_num(size), rhs);
-      } else if (rhs->type->ty == PTR) {
+      } else if (rhs->type->ty == PTR || node->type->ty == ARRAY) {
         // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
         type = rhs->type;
         int size = get_type_size(type->ptr_to);

@@ -61,6 +61,8 @@ void gen(Node* node) {
           case PTR:
             printf("  mov [rax], rdi\n");
             break;
+          case ARRAY:
+            error("配列は未対応です");  // TODO
         }
       }
 
@@ -84,6 +86,9 @@ void gen(Node* node) {
           break;
         case PTR:
           printf("  mov rax, [rax]\n");
+          break;
+        case ARRAY:
+          // アドレスをそのままスタックに積む
           break;
       }
       printf("  push rax\n");
@@ -109,6 +114,9 @@ void gen(Node* node) {
         case PTR:
           printf("  mov [rax], rdi\n");
           break;
+        case ARRAY:
+          error("配列型への代入はできません");
+          break;
       }
       printf("  push rdi\n");
       return;
@@ -124,6 +132,9 @@ void gen(Node* node) {
           break;
         case PTR:
           printf("  mov rax, [rax]\n");
+          break;
+        case ARRAY:
+          // アドレスをそのままスタックに積む
           break;
       }
       printf("  push rax\n");
