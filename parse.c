@@ -132,6 +132,7 @@ Node* relational();
 Node* add();
 Node* mul();
 Node* unaly();
+Node* postfix();
 Node* primary();
 
 Node* code[100];
@@ -294,40 +295,33 @@ Node* relational() {
   }
 }
 
+Node* new_add_node(Node* lhs, Node* rhs, NodeKind kind) {
+  Type* type = lhs->type;
+  if (lhs->type->ty == PTR || lhs->type->ty == ARRAY) {
+    // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
+    int size = get_type_size(type->ptr_to);
+    rhs = new_node(ND_MUL, new_node_num(size), rhs);
+  } else if (rhs->type->ty == PTR || lhs->type->ty == ARRAY) {
+    // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
+    type = rhs->type;
+    int size = get_type_size(type->ptr_to);
+    lhs = new_node(ND_MUL, new_node_num(size), lhs);
+  }
+  Node* node = new_node(kind, lhs, rhs);
+  node->type = type;
+  return node;
+}
+
 Node* add() {
   Node* node = mul();
 
   for (;;) {
     if (consume("+")) {
       Node* rhs = mul();
-      Type* type = node->type;
-      if (node->type->ty == PTR || node->type->ty == ARRAY) {
-        // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
-        int size = get_type_size(type->ptr_to);
-        rhs = new_node(ND_MUL, new_node_num(size), rhs);
-      } else if (rhs->type->ty == PTR || node->type->ty == ARRAY) {
-        // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
-        type = rhs->type;
-        int size = get_type_size(type->ptr_to);
-        node = new_node(ND_MUL, new_node_num(size), node);
-      }
-      node = new_node(ND_ADD, node, rhs);
-      node->type = type;
+      node = new_add_node(node, rhs, ND_ADD);
     } else if (consume("-")) {
       Node* rhs = mul();
-      Type* type = node->type;
-      if (node->type->ty == PTR || node->type->ty == ARRAY) {
-        // 左辺がポインタの場合は、右辺をprt_toのサイズ倍
-        int size = get_type_size(type->ptr_to);
-        rhs = new_node(ND_MUL, new_node_num(size), rhs);
-      } else if (rhs->type->ty == PTR || node->type->ty == ARRAY) {
-        // 右辺がポインタの場合は、左辺をprt_toのサイズ倍
-        type = rhs->type;
-        int size = get_type_size(type->ptr_to);
-        node = new_node(ND_MUL, new_node_num(size), node);
-      }
-      node = new_node(ND_SUB, node, rhs);
-      node->type = type;
+      node = new_add_node(node, rhs, ND_SUB);
     } else {
       return node;
     }
@@ -352,10 +346,10 @@ Node* mul() {
 
 Node* unaly() {
   if (consume("+")) {
-    return primary();
+    return postfix();
   }
   if (consume("-")) {
-    Node* node = primary();
+    Node* node = postfix();
     Type* type = node->type;
     node = new_node(ND_SUB, new_node_num(0), node);
     node->type = type;
@@ -379,7 +373,19 @@ Node* unaly() {
     Node* arg = unaly();
     return new_node_num(get_type_size(arg->type));
   }
-  return primary();
+  return postfix();
+}
+
+Node* postfix() {
+  Node* node = primary();
+  if (consume("[")) {
+    node = new_add_node(node, expr(), ND_ADD);
+    Type* type = node->type->ptr_to;
+    node = new_node(ND_DEREF, node, NULL);
+    node->type = type;
+    expect("]");
+  }
+  return node;
 }
 
 Node* primary() {
