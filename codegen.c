@@ -3,18 +3,23 @@
 
 // 左辺値のアドレスをスタックに1個積む
 void gen_lval(Node* node) {
-  if (node->kind != ND_LVAR) {
+  if (node->kind == ND_LVAR) {
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", node->offset);
+    printf("  push rax\n");
+  } else if (node->kind == ND_GVAR) {
+    printf("  push offset %.*s\n", node->name_len, node->name);
+  } else {
     error("代入の左辺値が変数ではありません");
   }
-
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
-  printf("  push rax\n");
 }
 
 void gen(Node* node) {
   switch (node->kind) {
     case ND_FUNCTION:
+      printf("  .text\n");
+      printf("  .global %.*s\n", node->name_len, node->name);
+      printf("  .type %.*s, @function\n", node->name_len, node->name);
       printf("%.*s:\n", node->name_len, node->name);
       // プロローグ
       // 変数26個分の領域を確保する
@@ -72,13 +77,28 @@ void gen(Node* node) {
       // エピローグ
       // 今はreturn文があるから来ない.
       printf("  ret\n");
+      return;
+    case ND_GVAR_DEF: {
+      int size = get_type_size(node->type);
+      printf("  .global %.*s\n", node->name_len, node->name);
+      printf("  .bss\n");
+      printf("  .align 4\n");  // TODO
+      printf("  .type %.*s, @object\n", node->name_len, node->name);
+      printf("  .size %.*s, %d\n", node->name_len, node->name, size);
+      printf("%.*s:\n", node->name_len, node->name);
+      printf("  .zero %d\n", size);
+      return;
+    }
     case ND_NUM:
       // 数値を1個スタックに積む
       printf("  push %d\n", node->val);
       return;
     case ND_LVAR:
+    case ND_GVAR:
       // 変数の値をスタックに積む
+      //   変数のアドレスをスタックに積む
       gen_lval(node);
+      //   変数のアドレスから値に積み替える
       printf("  pop rax\n");
       switch (node->type->ty) {
         case INT:
@@ -241,6 +261,7 @@ void gen(Node* node) {
       printf("  sub rsp, rax\n");
       printf("  push rax\n");
 
+      printf("  mov rax, 0\n");
       printf("  call %.*s\n", node->name_len, node->name);
       // 調整分を戻す
       printf("  pop rdi\n");

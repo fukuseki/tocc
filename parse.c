@@ -80,6 +80,41 @@ void add_lvar(Token* tok, Type* type) {
   locals = lvar;
 }
 
+typedef struct GVar GVar;
+
+// グローバル変数の型
+struct GVar {
+  GVar* next;
+  char* name;
+  int len;
+  Type* type;
+};
+
+// グローバル変数
+GVar* globals;
+
+GVar* find_gvar(Token* tok) {
+  for (GVar* var = globals; var; var = var->next) {
+    if (var->len == tok->len && !strncmp(var->name, tok->str, var->len)) {
+      return var;
+    }
+  }
+  return NULL;
+}
+
+void add_gvar(Token* tok, Type* type) {
+  if (find_gvar(tok)) {
+    error_at(tok->str, "変数 %.*s はすでに宣言されています", tok->len,
+             tok->str);
+  }
+  GVar* var = calloc(1, sizeof(GVar));
+  var->next = globals;
+  var->name = tok->str;
+  var->len = tok->len;
+  var->type = type;
+  globals = var;
+}
+
 Node* new_node(NodeKind kind, Node* lhs, Node* rhs) {
   Node* node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -98,13 +133,21 @@ Node* new_node_num(int val) {
 
 Node* new_node_lval(Token* tok) {
   Node* node = calloc(1, sizeof(Node));
-  node->kind = ND_LVAR;
   LVar* lvar = find_lvar(tok);
-  if (!lvar) {
-    error_at(tok->str, "変数 %.*s は宣言されていません", tok->len, tok->str);
+  if (lvar) {
+    node->kind = ND_LVAR;
+    node->offset = lvar->offset;
+    node->type = lvar->type;
+  } else {
+    GVar* gvar = find_gvar(tok);
+    if (!gvar) {
+      error_at(tok->str, "変数 %.*s は宣言されていません", tok->len, tok->str);
+    }
+    node->kind = ND_GVAR;
+    node->name = gvar->name;
+    node->name_len = gvar->len;
+    node->type = gvar->type;
   }
-  node->offset = lvar->offset;
-  node->type = lvar->type;
   return node;
 }
 
@@ -123,7 +166,7 @@ void add_node(NodeVector* vec, Node* node) {
   vec->array[vec->size++] = node;
 }
 
-Node* function();
+Node* declaration();
 Node* stmt();
 Node* expr();
 Node* assign();
@@ -140,7 +183,7 @@ Node* code[100];
 void program() {
   int i = 0;
   while (!at_eof()) {
-    code[i++] = function();
+    code[i++] = declaration();
   }
   code[i] = NULL;
 }
@@ -158,34 +201,53 @@ Node* block() {
   return node;
 }
 
-Node* function() {
+Node* declaration() {
   expect("int");
+  Type* type = new_type(INT);
+  while (consume("*")) {
+    type = new_ptr_type(type);
+  }
   Token* tok = consume_ident();
   if (!tok) {
-    error("関数名がありません");
+    error("識別子がありません");
   }
-  expect("(");
-  Node* node = new_node(ND_FUNCTION, NULL, NULL);
-  node->name = tok->str;
-  node->name_len = tok->len;
-  node->childs = new_node_vector();
-  for (;;) {
-    if (consume(")")) {
-      break;
+  if (consume("(")) {
+    // 関数定義
+    Node* node = new_node(ND_FUNCTION, NULL, NULL);
+    node->name = tok->str;
+    node->name_len = tok->len;
+    node->childs = new_node_vector();
+    for (;;) {
+      if (consume(")")) {
+        break;
+      }
+      if (node->childs->size) {
+        expect(",");
+      }
+      expect("int");
+      Token* tok = consume_ident();
+      if (!tok) {
+        error("関数の引数が不正です");
+      }
+      add_lvar(tok, new_type(INT));
+      add_node(node->childs, new_node_lval(tok));
     }
-    if (node->childs->size) {
-      expect(",");
+    node->lhs = block();
+    return node;
+  } else {
+    // グローバル変数宣言
+    if (consume("[")) {
+      type = new_array_type(type, expect_number());
+      expect("]");
     }
-    expect("int");
-    Token* tok = consume_ident();
-    if (!tok) {
-      error("関数の引数が不正です");
-    }
-    add_lvar(tok, new_type(INT));
-    add_node(node->childs, new_node_lval(tok));
+    add_gvar(tok, type);
+    expect(";");
+    Node* node = new_node(ND_GVAR_DEF, NULL, NULL);
+    node->name = tok->str;
+    node->name_len = tok->len;
+    node->type = type;
+    return node;
   }
-  node->lhs = block();
-  return node;
 }
 
 Node* stmt() {

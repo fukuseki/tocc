@@ -41,6 +41,8 @@ struct Type {
   size_t array_size;
 };
 
+int get_type_size(Type* type);
+
 // 抽象構文木のノードの種類
 typedef enum {
   ND_ADD,       // +
@@ -62,6 +64,8 @@ typedef enum {
   ND_CALL,      // 関数呼び出し
   ND_FUNCTION,  // 関数定義
   ND_LVAR,      // ローカル変数
+  ND_GVAR,      // グローバル変数
+  ND_GVAR_DEF,  // グローバル変数定義
   ND_NUM,       // 整数
 } NodeKind;
 

@@ -8,7 +8,7 @@ try() {
     echo ./tocc $input compile failed
     exit 1
   fi
-  gcc -g -o tmp tmp.s foo.o
+  gcc -static -g -fuse-ld=gold -o tmp tmp.s foo.o
   ./tmp
   actual="$?"
 
@@ -104,5 +104,8 @@ try 4 "int main(){return sizeof(1);}"
 try 4 "int main(){return sizeof(sizeof(1));}"
 try 3 "int main(){int a[2]; *a=1; *(a+1)=2; int* p; p=a; return *p + *(p+1);}"
 try 3 "int main(){int a[2]; a[0]=1; a[1]=2; int* p; p=a; return p[0] + 1[p];}"
+try 3 "int g; int main(){return 3;}"
+try 3 "int g; int main(){g = 3; return g;}"
+try 3 "int g; int main(){g = 1; bar(); return g;} int bar(){g=g+2; return 0;}"
 
 echo OK
