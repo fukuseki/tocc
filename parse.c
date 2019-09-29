@@ -25,6 +25,8 @@ Type* new_array_type(Type* ptr_to, size_t size) {
 
 int get_type_size(Type* type) {
   switch (type->ty) {
+    case CHAR:
+      return 1;
     case INT:
       return 4;
     case PTR:
@@ -35,6 +37,22 @@ int get_type_size(Type* type) {
       error("不正なタイプです");
       return 0;
   }
+}
+
+Type* parse_type() {
+  Type* type = NULL;
+  if (consume("int")) {
+    type = new_type(INT);
+  } else if (consume("char")) {
+    type = new_type(CHAR);
+  }
+  if (!type) {
+    return NULL;
+  }
+  while (consume("*")) {
+    type = new_ptr_type(type);
+  }
+  return type;
 }
 
 typedef struct LVar LVar;
@@ -202,8 +220,10 @@ Node* block() {
 }
 
 Node* declaration() {
-  expect("int");
-  Type* type = new_type(INT);
+  Type* type = parse_type();
+  if (!type) {
+    error("型名ではありません");
+  }
   while (consume("*")) {
     type = new_ptr_type(type);
   }
@@ -224,12 +244,15 @@ Node* declaration() {
       if (node->childs->size) {
         expect(",");
       }
-      expect("int");
+      Type* arg_type = parse_type();
+      if (!arg_type) {
+        error("型名ではありません");
+      }
       Token* tok = consume_ident();
       if (!tok) {
         error("関数の引数が不正です");
       }
-      add_lvar(tok, new_type(INT));
+      add_lvar(tok, arg_type);
       add_node(node->childs, new_node_lval(tok));
     }
     node->lhs = block();
@@ -281,12 +304,9 @@ Node* stmt() {
     node->post_expr = expr();
     expect(")");
     node->content_stmt = stmt();
-  } else if (consume("int")) {
+  } else if (lookahead("int") || lookahead("char")) {
     // 変数宣言
-    Type* type = new_type(INT);
-    while (consume("*")) {
-      type = new_ptr_type(type);
-    }
+    Type* type = parse_type();
     Token* name = consume_ident();
     if (consume("[")) {
       type = new_array_type(type, expect_number());
@@ -396,10 +416,10 @@ Node* mul() {
   for (;;) {
     if (consume("*")) {
       node = new_node(ND_MUL, node, unaly());
-      node->type = new_type(INT);
+      node->type = new_type(INT);  // TODO
     } else if (consume("/")) {
       node = new_node(ND_DIV, node, unaly());
-      node->type = new_type(INT);
+      node->type = new_type(INT);  // TODO
     } else {
       return node;
     }

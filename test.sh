@@ -107,5 +107,6 @@ try 3 "int main(){int a[2]; a[0]=1; a[1]=2; int* p; p=a; return p[0] + 1[p];}"
 try 3 "int g; int main(){return 3;}"
 try 3 "int g; int main(){g = 3; return g;}"
 try 3 "int g; int main(){g = 1; bar(); return g;} int bar(){g=g+2; return 0;}"
+try 3 "int main() {char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y;}"
 
 echo OK

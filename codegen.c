@@ -60,6 +60,9 @@ void gen(Node* node) {
         printf("  pop rdi\n");
         printf("  pop rax\n");
         switch (node->childs->array[i]->type->ty) {
+          case CHAR:
+            printf("  movsx BYTE PTR [rax], edi\n");
+            break;
           case INT:
             printf("  mov DWORD PTR [rax], edi\n");
             break;
@@ -101,6 +104,9 @@ void gen(Node* node) {
       //   変数のアドレスから値に積み替える
       printf("  pop rax\n");
       switch (node->type->ty) {
+        case CHAR:
+          printf("  movsx eax, BYTE PTR [rax]\n");
+          break;
         case INT:
           printf("  mov eax, DWORD PTR [rax]\n");
           break;
@@ -128,6 +134,9 @@ void gen(Node* node) {
       printf("  pop rdi\n");
       printf("  pop rax\n");
       switch (node->lhs->type->ty) {
+        case CHAR:
+          printf("  mov BYTE PTR [rax], edi\n");
+          break;
         case INT:
           printf("  mov DWORD PTR [rax], edi\n");
           break;
@@ -147,6 +156,9 @@ void gen(Node* node) {
       gen(node->lhs);
       printf("  pop rax\n");
       switch (node->lhs->type->ty) {
+        case CHAR:
+          printf("  mov eax, BYTE PTR [rax]\n");
+          break;
         case INT:
           printf("  mov eax, DWORD PTR [rax]\n");
           break;

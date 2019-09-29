@@ -36,7 +36,7 @@ Token* tokenize();
 
 typedef struct Type Type;
 struct Type {
-  enum Ty { INT, PTR, ARRAY } ty;
+  enum Ty { INT, CHAR, PTR, ARRAY } ty;
   Type* ptr_to;
   size_t array_size;
 };
