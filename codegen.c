@@ -61,7 +61,7 @@ void gen(Node* node) {
         printf("  pop rax\n");
         switch (node->childs->array[i]->type->ty) {
           case CHAR:
-            printf("  movsx BYTE PTR [rax], edi\n");
+            printf("  movsx BYTE PTR [rax], dil\n");
             break;
           case INT:
             printf("  mov DWORD PTR [rax], edi\n");
@@ -135,7 +135,7 @@ void gen(Node* node) {
       printf("  pop rax\n");
       switch (node->lhs->type->ty) {
         case CHAR:
-          printf("  mov BYTE PTR [rax], edi\n");
+          printf("  movsx BYTE PTR [rax], dil\n");
           break;
         case INT:
           printf("  mov DWORD PTR [rax], edi\n");
@@ -157,7 +157,7 @@ void gen(Node* node) {
       printf("  pop rax\n");
       switch (node->lhs->type->ty) {
         case CHAR:
-          printf("  mov eax, BYTE PTR [rax]\n");
+          printf("  movsx eax, BYTE PTR [rax]\n");
           break;
         case INT:
           printf("  mov eax, DWORD PTR [rax]\n");
