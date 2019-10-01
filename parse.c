@@ -184,6 +184,28 @@ void add_node(NodeVector* vec, Node* node) {
   vec->array[vec->size++] = node;
 }
 
+String* new_string(char* str, int len) {
+  String* string = calloc(1, sizeof(String));
+  string->str = str;
+  string->len = len;
+  return string;
+}
+
+StringVector* new_string_vector() {
+  StringVector* vec = calloc(1, sizeof(StringVector));
+  vec->capacity = 1;
+  vec->array = calloc(1, sizeof(String*));
+  return vec;
+}
+
+void add_string(StringVector* vec, String* string) {
+  if (vec->size == vec->capacity) {
+    vec->capacity *= 2;
+    vec->array = realloc(vec->array, vec->capacity * sizeof(String*));
+  }
+  vec->array[vec->size++] = string;
+}
+
 Node* declaration();
 Node* stmt();
 Node* expr();
@@ -199,6 +221,7 @@ Node* primary();
 Node* code[100];
 
 void program() {
+  all_strings = new_string_vector();
   int i = 0;
   while (!at_eof()) {
     code[i++] = declaration();
@@ -501,6 +524,15 @@ Node* primary() {
 
     // 左辺値(変数)
     return new_node_lval(tok);
+  }
+
+  // 文字列リテラル
+  if (lookahead_kind(TK_STRING)) {
+    Node* node = new_node(ND_STRING, NULL, NULL);
+    String* str = expect_string();
+    node->label = all_strings->size;
+    add_string(all_strings, str);
+    return node;
   }
 
   return new_node_num(expect_number());

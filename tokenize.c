@@ -48,6 +48,11 @@ bool lookahead(char* op) {
           !memcmp(token->str, op, token->len));
 }
 
+// 次のトークンが期待している型か
+bool lookahead_kind(TokenKind kind) {
+  return token->kind == kind;
+}
+
 // 次のトークンが期待している記号のときには、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char* op) {
@@ -87,6 +92,15 @@ int expect_number() {
   int val = token->val;
   token = token->next;
   return val;
+}
+
+String* expect_string() {
+  if (token->kind != TK_STRING) {
+    error_at(token->str, "文字列ではありません");
+  }
+  String* str = new_string(token->str, token->len);
+  token = token->next;
+  return str;
 }
 
 bool at_eof() {
@@ -174,6 +188,19 @@ Token* tokenize() {
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
       cur->val = strtol(p, &p, 10);
+      continue;
+    }
+
+    // 文字列リテラル
+    if (*p == '"') {
+      p++;
+      cur = new_token(TK_STRING, cur, p);
+      int len = 0;
+      while (p[len] != '"') {
+        len++;
+      }
+      p += len + 1;
+      cur->len = len;
       continue;
     }
 

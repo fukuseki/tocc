@@ -17,6 +17,8 @@ int main(int argc, char** argv) {
   // アセンブリの先頭部分を出力
   printf(".intel_syntax noprefix\n");
 
+  // 文字列リテラル部分
+  gen_strings();
   // 先頭の式から順にコード生成
   for (int i = 0; code[i]; i++) {
     gen(code[i]);

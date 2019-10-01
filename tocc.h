@@ -5,11 +5,32 @@ void error(char* fmt, ...);
 void error_at(char* loc, char* fmt, ...);
 extern char* user_input;
 
+// 文字列を格納する
+typedef struct String String;
+struct String {
+  char* str;
+  int len;
+};
+String* new_string(char* str, int len);
+
+typedef struct StringVector StringVector;
+struct StringVector {
+  int size;
+  int capacity;
+  String** array;
+};
+StringVector* new_string_vector();
+void add_string(StringVector* vec, String* string);
+
+// 全文字列リテラル
+StringVector* all_strings;
+
 // トークンの種別
 typedef enum {
   TK_RESERVED,  // 記号・予約語
   TK_IDENT,     // 識別子
   TK_NUM,       // 整数トークン
+  TK_STRING,    // 文字列リテラル
   TK_EOF,       // 入力の終わりを表すトークン
 } TokenKind;
 
@@ -28,10 +49,12 @@ extern Token* token;
 bool at_eof();
 
 bool lookahead(char* op);
+bool lookahead_kind(TokenKind kind);
 bool consume(char* op);
 Token* consume_ident();
 void expect(char* op);
 int expect_number();
+String* expect_string();
 Token* tokenize();
 
 typedef struct Type Type;
@@ -67,6 +90,7 @@ typedef enum {
   ND_GVAR,      // グローバル変数
   ND_GVAR_DEF,  // グローバル変数定義
   ND_NUM,       // 整数
+  ND_STRING,    // 文字列リテラル
 } NodeKind;
 
 typedef struct Node Node;
@@ -74,12 +98,12 @@ typedef struct NodeVector NodeVector;
 
 // 抽象構文木のノードの型
 struct Node {
-  NodeKind kind;       // ノードの種類
-  Node* lhs;           // 左辺
-  Node* rhs;           // 右辺
-  int val;             // kindがND_NUMの場合のみ使う
-  int offset;          // kindがND_LVARの場合のみ使う
-  int label;           // kindがND_IF,ND_WHILE,ND_FORの場合のみ使う
+  NodeKind kind;  // ノードの種類
+  Node* lhs;      // 左辺
+  Node* rhs;      // 右辺
+  int val;        // kindがND_NUMの場合のみ使う
+  int offset;     // kindがND_LVARの場合のみ使う
+  int label;      // kindがND_IF,ND_WHILE,ND_FOR,ND_STRINGの場合のみ使う
   Node* else_stmt;     // kindがND_IFの場合のみ使う
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
@@ -101,3 +125,4 @@ extern Node* code[100];
 void program();
 
 void gen(Node* node);
+void gen_strings();

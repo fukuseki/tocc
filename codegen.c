@@ -96,6 +96,10 @@ void gen(Node* node) {
       // 数値を1個スタックに積む
       printf("  push %d\n", node->val);
       return;
+    case ND_STRING:
+      // 数値を1個スタックに積む
+      printf("  push offset .LC%d\n", node->label);
+      return;
     case ND_LVAR:
     case ND_GVAR:
       // 変数の値をスタックに積む
@@ -333,4 +337,12 @@ void gen(Node* node) {
   }
   // 2項演算子の結果をpush
   printf("  push rax\n");
+}
+
+void gen_strings() {
+  for (int i = 0; i < all_strings->size; ++i) {
+    printf(".LC%d:\n", i);
+    String* str = all_strings->array[i];
+    printf("  .string \"%.*s\"\n", str->len, str->str);
+  }
 }
