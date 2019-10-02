@@ -4,6 +4,7 @@
 void error(char* fmt, ...);
 void error_at(char* loc, char* fmt, ...);
 extern char* user_input;
+extern char* filename;
 
 // 文字列を格納する
 typedef struct String String;

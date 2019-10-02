@@ -3,7 +3,8 @@ try() {
   expected=$1
   input=$2
 
-  ./tocc "$input" > tmp.s
+  echo "$input" > tmp.c_
+  ./tocc tmp.c_ > tmp.s
   if [ $? != 0 ]; then
     echo ./tocc $input compile failed
     exit 1
@@ -19,6 +20,12 @@ try() {
     exit 1
   fi
 }
+
+try 0 'int main() {
+  int a;
+  a = 0;
+  return aaa;
+}'
 
 try 0 "int main(){return 0;}"
 try 42 "int main(){return 42;}"
