@@ -21,12 +21,6 @@ try() {
   fi
 }
 
-try 0 'int main() {
-  int a;
-  a = 0;
-  return aaa;
-}'
-
 try 0 "int main(){return 0;}"
 try 42 "int main(){return 42;}"
 try 21 "int main(){return 5+20-4;}"
@@ -120,5 +114,9 @@ try 99 'int main(){char* p; p="abc"; return p[2];}'
 try 3 'int main(){char* p; p="ad"; return p[1]-p[0];}'
 try 0 'int main(){printf("abc\n"); return 0;}'
 try 0 'int main(){printf("i=%d\n", 3); return 0;}'
+try 0 'int main(){
+  // 行コメント
+  return 0; /* ブロックコメント */
+}'
 
 echo OK
