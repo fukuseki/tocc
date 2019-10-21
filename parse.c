@@ -279,6 +279,8 @@ Node* declaration() {
       add_node(node->childs, new_node_lval(tok));
     }
     node->lhs = block();
+    // ローカル変数を初期化
+    locals = NULL;
     return node;
   } else {
     // グローバル変数宣言
