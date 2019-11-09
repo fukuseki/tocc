@@ -92,6 +92,7 @@ typedef enum {
   ND_GVAR_DEF,  // グローバル変数定義
   ND_NUM,       // 整数
   ND_STRING,    // 文字列リテラル
+  ND_INITS,     // 初期値リスト
 } NodeKind;
 
 typedef struct Node Node;
@@ -108,10 +109,11 @@ struct Node {
   Node* else_stmt;     // kindがND_IFの場合のみ使う
   Node* post_expr;     // kindがND_FORの場合のみ使う
   Node* content_stmt;  // kindがND_FORの場合のみ使う
-  NodeVector* childs;  // kindがND_BLOCK,ND_CALL,ND_FUNCTIONの場合のみ使う
-  char* name;          // kindがND_CALLの場合のみ使う
-  int name_len;        // kindがND_CALLの場合のみ使う
-  Type* type;          // 型
+  NodeVector*
+      childs;  // kindがND_BLOCK,ND_CALL,ND_FUNCTION,ND_INITの場合のみ使う
+  char* name;    // kindがND_CALLの場合のみ使う
+  int name_len;  // kindがND_CALLの場合のみ使う
+  Type* type;    // 型
 };
 
 struct NodeVector {

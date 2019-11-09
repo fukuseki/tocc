@@ -217,6 +217,7 @@ Node* mul();
 Node* unaly();
 Node* postfix();
 Node* primary();
+Node* initializers();
 
 Node* code[100];
 
@@ -289,11 +290,15 @@ Node* declaration() {
       expect("]");
     }
     add_gvar(tok, type);
-    expect(";");
     Node* node = new_node(ND_GVAR_DEF, NULL, NULL);
     node->name = tok->str;
     node->name_len = tok->len;
     node->type = type;
+    if (consume("=")) {
+      // 初期値の指定
+      node->lhs = initializers();
+    }
+    expect(";");
     return node;
   }
 }
@@ -538,4 +543,23 @@ Node* primary() {
   }
 
   return new_node_num(expect_number());
+}
+
+Node* initializers() {
+  if (consume("{")) {
+    Node* node = new_node(ND_INITS, NULL, NULL);
+    node->childs = new_node_vector();
+    for (;;) {
+      if (consume("}")) {
+        break;
+      }
+      add_node(node->childs, assign());
+      if (consume("}")) {
+        break;
+      }
+      expect(",");
+    }
+    return node;
+  }
+  return assign();
 }

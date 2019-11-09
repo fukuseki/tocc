@@ -465,6 +465,21 @@ int test_94() {
   return 0; /* ブロックコメント */
 }
 
+int g95 = 3;
+int test_95() {
+  return g95;
+}
+
+int g96[2] = {1, 2};
+int test_96() {
+  return g96[0] + g96[1];
+}
+
+char g97[3] = {1, 2, 3};
+int test_97() {
+  return g97[0] + g97[1] + g97[2];
+}
+
 int error_count;
 int expect_eq(int expected, int actual, char* test_name) {
   if (expected == actual) {
@@ -573,6 +588,9 @@ int main() {
   expect_eq(0, test_92(), "test_92");
   expect_eq(0, test_93(), "test_93");
   expect_eq(0, test_94(), "test_94");
+  expect_eq(3, test_95(), "test_95");
+  expect_eq(3, test_96(), "test_96");
+  expect_eq(6, test_97(), "test_97");
 
   if (error_count) {
     printf("%d ERROR\n", error_count);

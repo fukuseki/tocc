@@ -14,6 +14,20 @@ void gen_lval(Node* node) {
   }
 }
 
+char* initializer_label(size_t size) {
+  switch (size) {
+    case 1:
+      return ".byte";
+    case 4:
+      return ".long";
+    case 8:
+      return ".quad";
+    default:
+      error("未対応のサイズ[%zu]です", size);
+  }
+  return NULL;
+}
+
 void gen(Node* node) {
   switch (node->kind) {
     case ND_FUNCTION:
@@ -84,12 +98,32 @@ void gen(Node* node) {
     case ND_GVAR_DEF: {
       int size = get_type_size(node->type);
       printf("  .global %.*s\n", node->name_len, node->name);
-      printf("  .bss\n");
+      printf("  .data\n");
       printf("  .align 4\n");  // TODO
       printf("  .type %.*s, @object\n", node->name_len, node->name);
       printf("  .size %.*s, %d\n", node->name_len, node->name, size);
       printf("%.*s:\n", node->name_len, node->name);
-      printf("  .zero %d\n", size);
+      // 初期値の設定
+      Node* initializer = node->lhs;
+      if (initializer) {
+        if (initializer->kind == ND_INITS) {
+          for (int i = 0; i < initializer->childs->size; ++i) {
+            Node* elem = initializer->childs->array[i];
+            int elem_size = get_type_size(node->type->ptr_to);
+            if (elem->kind == ND_NUM) {
+              printf("  %s %d\n", initializer_label(elem_size), elem->val);
+            } else {
+              error("定数以外は未対応です");
+            }
+          }
+        } else if (initializer->kind == ND_NUM) {
+          printf("  %s %d\n", initializer_label(size), initializer->val);
+        } else {
+          error("定数以外は未対応です");
+        }
+      } else {
+        printf("  .zero %d\n", size);
+      }
       return;
     }
     case ND_NUM:
