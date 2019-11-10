@@ -118,6 +118,9 @@ void gen(Node* node) {
           }
         } else if (initializer->kind == ND_NUM) {
           printf("  %s %d\n", initializer_label(size), initializer->val);
+        } else if (initializer->kind == ND_STRING) {
+          String* sval = initializer->sval;
+          printf("  .ascii \"%.*s\\0\"\n", sval->len, sval->str);
         } else {
           error("定数以外は未対応です");
         }

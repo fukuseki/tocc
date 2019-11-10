@@ -104,6 +104,7 @@ struct Node {
   Node* lhs;      // 左辺
   Node* rhs;      // 右辺
   int val;        // kindがND_NUMの場合のみ使う
+  String* sval;   // kindがND_STRINGの場合のみ使う
   int offset;     // kindがND_LVARの場合のみ使う
   int label;      // kindがND_IF,ND_WHILE,ND_FOR,ND_STRINGの場合のみ使う
   Node* else_stmt;     // kindがND_IFの場合のみ使う

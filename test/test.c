@@ -480,6 +480,11 @@ int test_97() {
   return g97[0] + g97[1] + g97[2];
 }
 
+char g98[3] = "ab";
+int test_98() {
+  return g98[0] + g98[1] + g98[2];
+}
+
 int error_count;
 int expect_eq(int expected, int actual, char* test_name) {
   if (expected == actual) {
@@ -591,6 +596,7 @@ int main() {
   expect_eq(3, test_95(), "test_95");
   expect_eq(3, test_96(), "test_96");
   expect_eq(6, test_97(), "test_97");
+  expect_eq(195, test_98(), "test_98");
 
   if (error_count) {
     printf("%d ERROR\n", error_count);

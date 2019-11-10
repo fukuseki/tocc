@@ -537,6 +537,7 @@ Node* primary() {
   if (lookahead_kind(TK_STRING)) {
     Node* node = new_node(ND_STRING, NULL, NULL);
     String* str = expect_string();
+    node->sval = str;
     node->label = all_strings->size;
     add_string(all_strings, str);
     return node;
