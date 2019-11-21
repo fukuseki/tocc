@@ -498,6 +498,12 @@ int expect_eq(int expected, int actual, char* test_name) {
   }
 }
 
+int test_99() {
+  int i = 1;
+  int j = i + 1;
+  return i + j;
+}
+
 int main() {
   expect_eq(0, test_1(), "test_1");
   expect_eq(42, test_2(), "test_2");
@@ -597,6 +603,7 @@ int main() {
   expect_eq(3, test_96(), "test_96");
   expect_eq(6, test_97(), "test_97");
   expect_eq(195, test_98(), "test_98");
+  expect_eq(3, test_99(), "test_99");
 
   if (error_count) {
     printf("%d ERROR\n", error_count);

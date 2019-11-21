@@ -343,8 +343,15 @@ Node* stmt() {
       expect("]");
     }
     add_lvar(name, type);
-    expect(";");
-    node = stmt();
+    // 初期値の指定
+    if (consume("=")) {
+      node = new_node(ND_ASSIGN, new_node_lval(name), assign());
+      node->type = node->lhs->type;
+      expect(";");
+    } else {
+      expect(";");
+      node = stmt();
+    }
   } else if (lookahead("{")) {
     node = block();
   } else {
