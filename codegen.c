@@ -14,6 +14,29 @@ void gen_lval(Node* node) {
   }
 }
 
+// 値と代入先アドレスをpopして代入する
+// 代入した値をスタックに積む
+void gen_assign(Type* lhs_type) {
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+  switch (lhs_type->ty) {
+    case CHAR:
+      printf("  mov BYTE PTR [rax], dil\n");
+      break;
+    case INT:
+      printf("  mov DWORD PTR [rax], edi\n");
+      break;
+    case PTR:
+      printf("  mov [rax], rdi\n");
+      break;
+    case ARRAY:
+      error("配列型への代入はできません");
+      break;
+  }
+  // 代入した値をスタックに積む
+  printf("  push rdi\n");
+}
+
 char* initializer_label(size_t size) {
   switch (size) {
     case 1:
@@ -71,21 +94,9 @@ void gen(Node* node) {
             error("引数7個以上は未対応です");
         }
         // 代入実行
-        printf("  pop rdi\n");
+        gen_assign(node->childs->array[i]->type);
+        // 代入結果をスタックから除く
         printf("  pop rax\n");
-        switch (node->childs->array[i]->type->ty) {
-          case CHAR:
-            printf("  mov BYTE PTR [rax], dil\n");
-            break;
-          case INT:
-            printf("  mov DWORD PTR [rax], edi\n");
-            break;
-          case PTR:
-            printf("  mov [rax], rdi\n");
-            break;
-          case ARRAY:
-            error("配列は未対応です");  // TODO
-        }
       }
 
       // 関数の中身
@@ -126,6 +137,52 @@ void gen(Node* node) {
         }
       } else {
         printf("  .zero %d\n", size);
+      }
+      return;
+    }
+    case ND_LVAR_DEF: {
+      // 初期値の設定
+      Node* initializer = node->rhs;
+      if (initializer) {
+        if (initializer->kind == ND_INITS) {
+          Type* array_to = node->lhs->type->ptr_to;
+          for (int i = 0; i < node->lhs->type->array_size; ++i) {
+            int size = get_type_size(array_to);
+            // 左辺値のアドレスをpush
+            printf("  mov rax, rbp\n");
+            printf("  sub rax, %d\n", node->lhs->offset);
+            printf("  add rax, %d\n", i * size);
+            printf("  push rax\n");
+            // 右辺の値をpush
+            if (i < initializer->childs->size) {
+              gen(initializer->childs->array[i]);
+            } else {
+              printf("  push 0\n");
+            }
+            //代入
+            gen_assign(array_to);
+          }
+        } else if (initializer->kind == ND_STRING) {
+          for (int i = 0; i < node->lhs->type->array_size; ++i) {
+            // 左辺値のアドレスをpush
+            printf("  mov rax, rbp\n");
+            printf("  sub rax, %d\n", node->lhs->offset);
+            printf("  add rax, %d\n", i);
+            printf("  push rax\n");
+            // 右辺の値をpush
+            if (i < initializer->sval->len) {
+              printf("  push %hhd\n", initializer->sval->str[i]);
+            } else {
+              printf("  push 0\n");
+            }
+            //代入
+            gen_assign(node->lhs->type->ptr_to);
+          }
+        } else {
+          gen_lval(node->lhs);
+          gen(initializer);
+          gen_assign(node->lhs->type);
+        }
       }
       return;
     }
@@ -172,23 +229,7 @@ void gen(Node* node) {
       gen(node->rhs);
 
       // 代入実行
-      printf("  pop rdi\n");
-      printf("  pop rax\n");
-      switch (node->lhs->type->ty) {
-        case CHAR:
-          printf("  mov BYTE PTR [rax], dil\n");
-          break;
-        case INT:
-          printf("  mov DWORD PTR [rax], edi\n");
-          break;
-        case PTR:
-          printf("  mov [rax], rdi\n");
-          break;
-        case ARRAY:
-          error("配列型への代入はできません");
-          break;
-      }
-      printf("  push rdi\n");
+      gen_assign(node->lhs->type);
       return;
     case ND_ADDR:
       gen_lval(node->lhs);

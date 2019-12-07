@@ -335,7 +335,7 @@ Node* stmt() {
     expect(")");
     node->content_stmt = stmt();
   } else if (lookahead("int") || lookahead("char")) {
-    // 変数宣言
+    // ローカル変数宣言
     Type* type = parse_type();
     Token* name = consume_ident();
     if (consume("[")) {
@@ -343,15 +343,12 @@ Node* stmt() {
       expect("]");
     }
     add_lvar(name, type);
+    node = new_node(ND_LVAR_DEF, new_node_lval(name), NULL);
     // 初期値の指定
     if (consume("=")) {
-      node = new_node(ND_ASSIGN, new_node_lval(name), assign());
-      node->type = node->lhs->type;
-      expect(";");
-    } else {
-      expect(";");
-      node = stmt();
+      node->rhs = initializers();
     }
+    expect(";");
   } else if (lookahead("{")) {
     node = block();
   } else {

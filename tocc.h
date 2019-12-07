@@ -88,6 +88,7 @@ typedef enum {
   ND_CALL,      // 関数呼び出し
   ND_FUNCTION,  // 関数定義
   ND_LVAR,      // ローカル変数
+  ND_LVAR_DEF,  // ローカル変数宣言
   ND_GVAR,      // グローバル変数
   ND_GVAR_DEF,  // グローバル変数定義
   ND_NUM,       // 整数

@@ -504,6 +504,21 @@ int test_99() {
   return i + j;
 }
 
+int test_100() {
+  char a[2] = {1, 2};
+  return a[0] + a[1];
+}
+
+int test_101() {
+  char a[3] = "AB";
+  return a[0] + a[1] + a[2];
+}
+
+int test_102() {
+  char a[3] = {fib(1), fib(2)};
+  return a[0] + a[1] + a[2];
+}
+
 int main() {
   expect_eq(0, test_1(), "test_1");
   expect_eq(42, test_2(), "test_2");
@@ -604,6 +619,9 @@ int main() {
   expect_eq(6, test_97(), "test_97");
   expect_eq(195, test_98(), "test_98");
   expect_eq(3, test_99(), "test_99");
+  expect_eq(3, test_100(), "test_100");
+  expect_eq(131, test_101(), "test_101");
+  expect_eq(3, test_102(), "test_102");
 
   if (error_count) {
     printf("%d ERROR\n", error_count);
