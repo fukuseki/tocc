@@ -397,24 +397,28 @@ void gen(Node* node) {
       printf("  mov r3, r0\n");
       break;
     case ND_EQ:
-      printf("  cmp rax, rdi\n");
-      printf("  sete al\n");
-      printf("  movzb rax, al\n");
+      printf("  cmp r2, r3\n");
+      printf("  moveq r3, #1\n");
+      printf("  movne r3, #0\n");
+      printf("  and r3, r3, #255\n");
       break;
     case ND_NE:
-      printf("  cmp rax, rdi\n");
-      printf("  setne al\n");
-      printf("  movzb rax, al\n");
+      printf("  cmp r2, r3\n");
+      printf("  movne r3, #1\n");
+      printf("  moveq r3, #0\n");
+      printf("  and r3, r3, #255\n");
       break;
     case ND_LT:
-      printf("  cmp rax, rdi\n");
-      printf("  setl al\n");
-      printf("  movzb rax, al\n");
+      printf("  cmp r2, r3\n");
+      printf("  movlt r3, #1\n");
+      printf("  movge r3, #0\n");
+      printf("  and r3, r3, #255\n");
       break;
     case ND_LE:
-      printf("  cmp rax, rdi\n");
-      printf("  setle al\n");
-      printf("  movzb rax, al\n");
+      printf("  cmp r2, r3\n");
+      printf("  movle r3, #1\n");
+      printf("  movgt r3, #0\n");
+      printf("  and r3, r3, #255\n");
       break;
     default:
       error("予期しないkind=%d", node->kind);
