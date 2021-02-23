@@ -49,9 +49,6 @@ int main(int argc, char** argv) {
   token = tokenize();
   program();
 
-  // アセンブリの先頭部分を出力
-  printf(".intel_syntax noprefix\n");
-
   // 文字列リテラル部分
   gen_strings();
   // 先頭の式から順にコード生成

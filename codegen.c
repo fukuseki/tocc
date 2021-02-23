@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include "tocc.h"
 
+void push_val(int val) {
+  printf("  mov r3, #%d\n", val);
+  printf("  str r3, [sp, #-4]!\n");
+}
+
 // 左辺値のアドレスをスタックに1個積む
 void gen_lval(Node* node) {
   if (node->kind == ND_LVAR) {
@@ -56,13 +61,13 @@ void gen(Node* node) {
     case ND_FUNCTION:
       printf("  .text\n");
       printf("  .global %.*s\n", node->name_len, node->name);
-      printf("  .type %.*s, @function\n", node->name_len, node->name);
+      printf("  .type %.*s, %%function\n", node->name_len, node->name);
       printf("%.*s:\n", node->name_len, node->name);
       // プロローグ
+      printf("  str fp, [sp, #-4]!\n");
+      printf("  add fp, sp, #0\n");
       // 変数26個分の領域を確保する
-      printf("  push rbp\n");
-      printf("  mov rbp, rsp\n");
-      printf("  sub rsp, 208\n");
+      printf("  sub sp, sp, #208\n");
 
       // 引数をレジスタから変数へ移動
       for (int i = 0; i < node->childs->size; i++) {
@@ -102,9 +107,6 @@ void gen(Node* node) {
       // 関数の中身
       gen(node->lhs);
 
-      // エピローグ
-      // 今はreturn文があるから来ない.
-      printf("  ret\n");
       return;
     case ND_GVAR_DEF: {
       int size = get_type_size(node->type);
@@ -188,7 +190,7 @@ void gen(Node* node) {
     }
     case ND_NUM:
       // 数値を1個スタックに積む
-      printf("  push %d\n", node->val);
+      push_val(node->val);
       return;
     case ND_STRING:
       // 数値を1個スタックに積む
@@ -256,11 +258,12 @@ void gen(Node* node) {
     case ND_RETURN:
       // 左の値をスタックに積む
       gen(node->lhs);
-      // スタックをraxに詰めてret
-      printf("  pop rax\n");
-      printf("  mov rsp, rbp\n");
-      printf("  pop rbp\n");
-      printf("  ret\n");
+      // スタックをr0に詰めてret
+      printf("  pop {r0}\n");
+      // エピローグ
+      printf("  add sp, fp, #0\n");
+      printf("  ldr fp, [sp], #4\n");
+      printf("  bx lr\n");
       return;
     case ND_IF:
       // 条件式の結果をスタックに積む
@@ -318,7 +321,7 @@ void gen(Node* node) {
         gen(node->childs->array[i]);
         // 式の評価結果としてスタックに1つの値が残っている
         // はずなので、スタックが溢れないようにポップしておく
-        printf("  pop rax\n");
+        printf("  pop {r0}\n");
       }
       return;
     case ND_CALL:
