@@ -64,8 +64,8 @@ void gen(Node* node) {
       printf("  .type %.*s, %%function\n", node->name_len, node->name);
       printf("%.*s:\n", node->name_len, node->name);
       // プロローグ
-      printf("  str fp, [sp, #-4]!\n");
-      printf("  add fp, sp, #0\n");
+      printf("  push {fp, lr}\n");
+      printf("  add fp, sp, #4\n");
       // 変数26個分の領域を確保する
       printf("  sub sp, sp, #208\n");
 
@@ -261,8 +261,8 @@ void gen(Node* node) {
       // スタックをr0に詰めてret
       printf("  pop {r0}\n");
       // エピローグ
-      printf("  add sp, fp, #0\n");
-      printf("  ldr fp, [sp], #4\n");
+      printf("  sub sp, fp, #4\n");
+      printf("  pop {fp, lr}\n");
       printf("  bx lr\n");
       return;
     case ND_IF:
@@ -376,22 +376,25 @@ void gen(Node* node) {
   gen(node->rhs);
 
   // 2項演算子はスタックから2個値(左辺と右辺)をpopし、結果を1個pushする
-  printf("  pop rdi\n");
-  printf("  pop rax\n");
+  printf("  pop {r3}\n");
+  printf("  pop {r2}\n");
 
   switch (node->kind) {
     case ND_ADD:
-      printf("  add rax, rdi\n");
+      printf("  add r3, r2, r3\n");
       break;
     case ND_SUB:
-      printf("  sub rax, rdi\n");
+      printf("  sub r3, r2, r3\n");
       break;
     case ND_MUL:
-      printf("  imul rax, rdi\n");
+      printf("  mul r3, r2, r3\n");
       break;
     case ND_DIV:
-      printf("  cqo\n");
-      printf("  idiv rdi\n");
+      // 割り算命令は無いので、組み込み関数の呼び出しに置き換え
+      printf("  mov r1, r3\n");
+      printf("  mov r0, r2\n");
+      printf("  bl __aeabi_idiv\n");
+      printf("  mov r3, r0\n");
       break;
     case ND_EQ:
       printf("  cmp rax, rdi\n");
@@ -417,7 +420,7 @@ void gen(Node* node) {
       error("予期しないkind=%d", node->kind);
   }
   // 2項演算子の結果をpush
-  printf("  push rax\n");
+  printf("  push {r3}\n");
 }
 
 void gen_strings() {
