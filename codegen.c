@@ -9,9 +9,8 @@ void push_val(int val) {
 // 左辺値のアドレスをスタックに1個積む
 void gen_lval(Node* node) {
   if (node->kind == ND_LVAR) {
-    printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", node->offset);
-    printf("  push rax\n");
+    printf("  sub r3, fp, #%d\n", node->offset);
+    printf("  push {r3}\n");
   } else if (node->kind == ND_GVAR) {
     printf("  push offset %.*s\n", node->name_len, node->name);
   } else {
@@ -22,24 +21,22 @@ void gen_lval(Node* node) {
 // 値と代入先アドレスをpopして代入する
 // 代入した値をスタックに積む
 void gen_assign(Type* lhs_type) {
-  printf("  pop rdi\n");
-  printf("  pop rax\n");
+  printf("  pop {r2}\n");   // 値
+  printf("  pop {r3}\n");   // 代入先アドレス
   switch (lhs_type->ty) {
     case CHAR:
-      printf("  mov BYTE PTR [rax], dil\n");
+      printf("  strb r2, [r3]\n");
       break;
-    case INT:
-      printf("  mov DWORD PTR [rax], edi\n");
-      break;
+    case INT: 
     case PTR:
-      printf("  mov [rax], rdi\n");
+      printf("  str r2, [r3]\n");
       break;
     case ARRAY:
       error("配列型への代入はできません");
       break;
   }
   // 代入した値をスタックに積む
-  printf("  push rdi\n");
+  printf("  push {r2}\n");
 }
 
 char* initializer_label(size_t size) {
@@ -202,22 +199,20 @@ void gen(Node* node) {
       //   変数のアドレスをスタックに積む
       gen_lval(node);
       //   変数のアドレスから値に積み替える
-      printf("  pop rax\n");
+      printf("  pop {r3}\n");
       switch (node->type->ty) {
         case CHAR:
-          printf("  movsx eax, BYTE PTR [rax]\n");
+          printf("  ldrb r2, [r3]\n");
           break;
         case INT:
-          printf("  mov eax, DWORD PTR [rax]\n");
-          break;
         case PTR:
-          printf("  mov rax, [rax]\n");
+          printf("  ldr r2, [r3]\n");
           break;
         case ARRAY:
           // アドレスをそのままスタックに積む
           break;
       }
-      printf("  push rax\n");
+      printf("  push {r2}\n");
       return;
     case ND_ASSIGN:
       // 左辺(代入先)のアドレスをスタックに積む
