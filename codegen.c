@@ -293,22 +293,22 @@ void gen(Node* node) {
     case ND_FOR:
       // 初期化式
       gen(node->lhs);
-      printf("  pop rax\n");  // スタックに式の値が残っている
+      printf("  pop {r3}\n");  // スタックに式の値が残っている
 
       printf(".Lbegin%d:\n", node->label);
       // 条件式の結果をスタックに積む
       gen(node->rhs);
       // 分岐
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
-      printf("  je .Lend%d\n", node->label);
+      printf("  pop {r3}\n");
+      printf("  cmp r3, #0\n");
+      printf("  beq .Lend%d\n", node->label);
       // 中身
       gen(node->content_stmt);
       // 後処理(forの3項目)
       gen(node->post_expr);
-      printf("  pop rax\n");  // スタックに式の値が残っている
+      printf("  pop {r3}\n");  // スタックに式の値が残っている
 
-      printf("  jmp .Lbegin%d\n", node->label);
+      printf("  b .Lbegin%d\n", node->label);
       printf(".Lend%d:\n", node->label);
       return;
     case ND_BLOCK:
