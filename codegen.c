@@ -282,12 +282,12 @@ void gen(Node* node) {
       // 条件式の結果をスタックに積む
       gen(node->lhs);
       // 分岐
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
-      printf("  je .Lend%d\n", node->label);
+      printf("  pop {r3}\n");
+      printf("  cmp r3, #0\n");
+      printf("  beq .Lend%d\n", node->label);
       // ループの中身
       gen(node->rhs);
-      printf("  jmp .Lbegin%d\n", node->label);
+      printf("  b .Lbegin%d\n", node->label);
       printf(".Lend%d:\n", node->label);
       return;
     case ND_FOR:
