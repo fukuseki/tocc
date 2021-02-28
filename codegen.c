@@ -264,12 +264,12 @@ void gen(Node* node) {
       // 条件式の結果をスタックに積む
       gen(node->lhs);
       // 分岐
-      printf("  pop rax\n");
-      printf("  cmp rax, 0\n");
-      printf("  je .Lelse%d\n", node->label);
+      printf("  pop {r3}\n");
+      printf("  cmp r3, #0\n");
+      printf("  beq .Lelse%d\n", node->label);
       // then
       gen(node->rhs);
-      printf("  jmp .Lend%d\n", node->label);
+      printf("  b .Lend%d\n", node->label);
       printf(".Lelse%d:\n", node->label);
       // else
       if (node->else_stmt) {
