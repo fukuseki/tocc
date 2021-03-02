@@ -9,8 +9,9 @@ void push_val(int val) {
 // 左辺値のアドレスをスタックに1個積む
 void gen_lval(Node* node) {
   if (node->kind == ND_LVAR) {
-    printf("  sub r3, fp, #%d\n", node->offset);
-    printf("  push {r3}\n");
+    // +4 は プロローグでlrをpushした分
+    printf("  sub r4, fp, #%d\n", node->offset + 4);
+    printf("  push {r4}\n");
   } else if (node->kind == ND_GVAR) {
     printf("  push offset %.*s\n", node->name_len, node->name);
   } else {
@@ -21,22 +22,22 @@ void gen_lval(Node* node) {
 // 値と代入先アドレスをpopして代入する
 // 代入した値をスタックに積む
 void gen_assign(Type* lhs_type) {
-  printf("  pop {r2}\n");   // 値
-  printf("  pop {r3}\n");   // 代入先アドレス
+  printf("  pop {r4}\n");   // 値
+  printf("  pop {r5}\n");   // 代入先アドレス
   switch (lhs_type->ty) {
     case CHAR:
-      printf("  strb r2, [r3]\n");
+      printf("  strb r4, [r5]\n");
       break;
     case INT: 
     case PTR:
-      printf("  str r2, [r3]\n");
+      printf("  str r4, [r5]\n");
       break;
     case ARRAY:
       error("配列型への代入はできません");
       break;
   }
   // 代入した値をスタックに積む
-  printf("  push {r2}\n");
+  printf("  push {r4}\n");
 }
 
 char* initializer_label(size_t size) {
@@ -63,8 +64,15 @@ void gen(Node* node) {
       // プロローグ
       printf("  push {fp, lr}\n");
       printf("  add fp, sp, #4\n");
+      // プロローグ実行後のスタックの状態
+      //   0 --- <- 開始時のsp
+      //     開始時のfp
+      //  -4 --- <- fp
+      //     開始時のlr
+      //  -8 --- <- sp
+
       // 変数26個分の領域を確保する
-      printf("  sub sp, sp, #208\n");
+      printf("  sub sp, sp, #%d\n", 4 * 26);
 
       // 引数をレジスタから変数へ移動
       for (int i = 0; i < node->childs->size; i++) {
@@ -72,25 +80,18 @@ void gen(Node* node) {
         Node* lhs = node->childs->array[i];
         gen_lval(lhs);
         // 右辺の値をスタックに積む
-        gen_lval(node->childs->array[i]);
         switch (i) {
           case 0:
-            printf("  push rdi\n");
+            printf("  push {r0} @\n");
             break;
           case 1:
-            printf("  push rsi\n");
+            printf("  push {r1} @\n");
             break;
           case 2:
-            printf("  push rdx\n");
+            printf("  push {r2} @\n");
             break;
           case 3:
-            printf("  push rcx\n");
-            break;
-          case 4:
-            printf("  push r8\n");
-            break;
-          case 5:
-            printf("  push r9\n");
+            printf("  push {r3} @\n");
             break;
           default:
             error("引数7個以上は未対応です");
@@ -98,7 +99,7 @@ void gen(Node* node) {
         // 代入実行
         gen_assign(node->childs->array[i]->type);
         // 代入結果をスタックから除く
-        printf("  pop rax\n");
+        printf("  pop {r4}\n");
       }
 
       // 関数の中身
@@ -340,8 +341,19 @@ void gen(Node* node) {
       if (1 <= node->childs->size) {
         printf("  pop {r0}\n");
       }
+      // SPを4の倍数から8の倍数になるように調整
+      printf("  add r4, sp, #4\n");  // +4は調整値のpush分
+      printf("  and r4, r4, #4\n");
+      printf("  sub sp, sp, r4\n");
+      printf("  push {r4}\n");
+
       // 関数呼び出し
       printf("  bl %.*s\n", node->name_len, node->name);
+
+      // 調整分を戻す
+      printf("  pop {r4}\n");
+      printf("  add sp, sp, r4\n");
+
       // 返り値
       printf("  push {r0}\n");
       return;

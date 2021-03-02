@@ -30,7 +30,7 @@ int get_type_size(Type* type) {
     case INT:
       return 4;
     case PTR:
-      return 8;
+      return 4;
     case ARRAY:
       return type->array_size * get_type_size(type->ptr_to);
     default:
