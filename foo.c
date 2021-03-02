@@ -11,6 +11,11 @@ int foo2(int x, int y) {
   return 11;
 }
 
+int foo4(int a, int b, int c, int d) {
+  printf("OK, %d, %d, %d, %d\n", a, b, c, d);
+  return a * b + c / d;
+}
+
 int foo6(int a, int b, int c, int d, int e, int f) {
   printf("OK, %d, %d, %d, %d, %d, %d\n", a, b, c, d, e, f);
   return 11;

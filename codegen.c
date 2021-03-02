@@ -325,41 +325,25 @@ void gen(Node* node) {
         gen(node->childs->array[i]);
       }
       // 引数をスタックからレジスタに載せる
-      if (7 <= node->childs->size) {
-        error("引数7個以上は未対応です");
-      }
-      if (6 <= node->childs->size) {
-        printf("  pop r9\n");
-      }
       if (5 <= node->childs->size) {
-        printf("  pop r8\n");
+        error("引数5個以上は未対応です");
       }
       if (4 <= node->childs->size) {
-        printf("  pop rcx\n");
+        printf("  pop {r3}\n");
       }
       if (3 <= node->childs->size) {
-        printf("  pop rdx\n");
+        printf("  pop {r2}\n");
       }
       if (2 <= node->childs->size) {
-        printf("  pop rsi\n");
+        printf("  pop {r1}\n");
       }
       if (1 <= node->childs->size) {
-        printf("  pop rdi\n");
+        printf("  pop {r0}\n");
       }
-      // RSPを8の倍数から16の倍数になるように調整
-      printf("  mov rax, rsp\n");
-      printf("  add rax, 8\n");  // 調整値のpush分
-      printf("  and rax, 8\n");
-      printf("  sub rsp, rax\n");
-      printf("  push rax\n");
-
-      printf("  mov rax, 0\n");
-      printf("  call %.*s\n", node->name_len, node->name);
-      // 調整分を戻す
-      printf("  pop rdi\n");
-      printf("  add rsp, rdi\n");
-
-      printf("  push rax\n");
+      // 関数呼び出し
+      printf("  bl %.*s\n", node->name_len, node->name);
+      // 返り値
+      printf("  push {r0}\n");
       return;
     default:
       break;
