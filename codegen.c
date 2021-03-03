@@ -234,22 +234,20 @@ void gen(Node* node) {
       return;
     case ND_DEREF:
       gen(node->lhs);
-      printf("  pop rax\n");
+      printf("  pop {r3}\n");
       switch (node->lhs->type->ptr_to->ty) {
         case CHAR:
-          printf("  movsx eax, BYTE PTR [rax]\n");
+          printf("  ldrb r3, [r3]\n");
           break;
         case INT:
-          printf("  mov eax, DWORD PTR [rax]\n");
-          break;
         case PTR:
-          printf("  mov rax, [rax]\n");
+          printf("  ldr r3, [r3]\n");
           break;
         case ARRAY:
           // アドレスをそのままスタックに積む
           break;
       }
-      printf("  push rax\n");
+      printf("  push {r3}\n");
       return;
     case ND_RETURN:
       // 左の値をスタックに積む
