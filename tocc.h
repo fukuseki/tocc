@@ -126,7 +126,7 @@ struct NodeVector {
 NodeVector* new_node_vector();
 void add_node(NodeVector* vec, Node* node);
 
-extern Node* code[100];
+extern Node* code[1000];
 void program();
 
 void gen(Node* node);

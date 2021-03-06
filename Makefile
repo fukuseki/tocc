@@ -1,11 +1,9 @@
-CFLAGS=-std=c11 -g -static -Wall -Werror
-SRCS=codegen.c main.c parse.c tokenize.c
-OBJS=$(SRCS:.c=.o)
+CC=gcc
+CFLAGS=-std=c11 -g -Wall -Werror -fsanitize=address -fsanitize=undefined
+SRCS=codegen.c main.c tokenize.c parse.c
 
-tocc: $(OBJS)
-	$(CC) -o tocc $(OBJS) $(LDFLAGS)
-
-$(OBJS): tocc.h
+tocc: $(SRCS)
+	$(CC) -o tocc $(SRCS) $(CFLAGS)
 
 foo.o: foo.c
 	arm-linux-gnueabihf-gcc -c -o foo.o foo.c

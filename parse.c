@@ -219,13 +219,16 @@ Node* postfix();
 Node* primary();
 Node* initializers();
 
-Node* code[100];
+Node* code[1000];
 
 void program() {
   all_strings = new_string_vector();
   int i = 0;
   while (!at_eof()) {
     code[i++] = declaration();
+    if (i == sizeof(code)/sizeof(code[0])) {
+      error("codeのサイズが足りない!"); // TODO
+    }
   }
   code[i] = NULL;
 }

@@ -2,7 +2,7 @@
 
 for i in test/42/*; do
   echo $i
-  ./tocc $i > tmp.s
+  ASAN_OPTIONS=detect_leaks=1 ./tocc $i > tmp.s
   arm-linux-gnueabihf-gcc -static -g -use-ld=gold -o tmp tmp.s foo.o
   (
     set +e
