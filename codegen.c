@@ -13,7 +13,8 @@ void gen_lval(Node* node) {
     printf("  sub r4, fp, #%d\n", node->offset + 4);
     printf("  push {r4}\n");
   } else if (node->kind == ND_GVAR) {
-    printf("  push offset %.*s\n", node->name_len, node->name);
+    printf("  ldr r4, .L3+%d\n", node->offset);
+    printf("  push {r4}\n");
   } else {
     error("代入の左辺値が変数ではありません");
   }
@@ -45,7 +46,7 @@ char* initializer_label(size_t size) {
     case 1:
       return ".byte";
     case 4:
-      return ".long";
+      return ".word";
     case 8:
       return ".quad";
     default:
@@ -110,8 +111,8 @@ void gen(Node* node) {
       int size = get_type_size(node->type);
       printf("  .global %.*s\n", node->name_len, node->name);
       printf("  .data\n");
-      printf("  .align 4\n");  // TODO
-      printf("  .type %.*s, @object\n", node->name_len, node->name);
+      printf("  .align 2\n");  // TODO
+      printf("  .type %.*s, %%object\n", node->name_len, node->name);
       printf("  .size %.*s, %d\n", node->name_len, node->name, size);
       printf("%.*s:\n", node->name_len, node->name);
       // 初期値の設定
@@ -421,5 +422,12 @@ void gen_strings() {
     printf(".LC%d:\n", i);
     String* str = all_strings->array[i];
     printf("  .string \"%.*s\"\n", str->len, str->str);
+  }
+}
+
+void gen_globals_list() {
+  printf(".L3:\n");
+  for (GVar* var = globals; var; var = var->next) {
+    printf("  .word %.*s\n", var->len, var->name);
   }
 }

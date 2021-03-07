@@ -55,6 +55,8 @@ int main(int argc, char** argv) {
   for (int i = 0; code[i]; i++) {
     gen(code[i]);
   }
+  // グローバル変数のラベルリストを生成
+  gen_globals_list();
 
   return 0;
 }

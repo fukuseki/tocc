@@ -131,3 +131,19 @@ void program();
 
 void gen(Node* node);
 void gen_strings();
+
+typedef struct GVar GVar;
+
+// グローバル変数の型
+struct GVar {
+  GVar* next;
+  char* name;
+  int len;
+  Type* type;
+  int offset;
+};
+
+// グローバル変数
+extern GVar* globals;
+
+void gen_globals_list();

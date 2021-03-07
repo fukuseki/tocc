@@ -98,16 +98,6 @@ void add_lvar(Token* tok, Type* type) {
   locals = lvar;
 }
 
-typedef struct GVar GVar;
-
-// グローバル変数の型
-struct GVar {
-  GVar* next;
-  char* name;
-  int len;
-  Type* type;
-};
-
 // グローバル変数
 GVar* globals;
 
@@ -130,6 +120,9 @@ void add_gvar(Token* tok, Type* type) {
   var->name = tok->str;
   var->len = tok->len;
   var->type = type;
+  if (var->next) {
+    var->offset = var->next->offset + 4; // 4はポインタのサイズ
+  }
   globals = var;
 }
 
@@ -165,6 +158,7 @@ Node* new_node_lval(Token* tok) {
     node->name = gvar->name;
     node->name_len = gvar->len;
     node->type = gvar->type;
+    node->offset = gvar->offset;
   }
   return node;
 }
