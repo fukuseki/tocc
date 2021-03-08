@@ -59,6 +59,7 @@ void gen(Node* node) {
   switch (node->kind) {
     case ND_FUNCTION:
       printf("  .text\n");
+      printf("  .align 2\n");
       printf("  .global %.*s\n", node->name_len, node->name);
       printf("  .type %.*s, %%function\n", node->name_len, node->name);
       printf("%.*s:\n", node->name_len, node->name);
@@ -131,8 +132,7 @@ void gen(Node* node) {
         } else if (initializer->kind == ND_NUM) {
           printf("  %s %d\n", initializer_label(size), initializer->val);
         } else if (initializer->kind == ND_STRING) {
-          String* sval = initializer->sval;
-          printf("  .ascii \"%.*s\\0\"\n", sval->len, sval->str);
+          printf("  .word .LC%d\n", initializer->label);
         } else {
           error("定数以外は未対応です");
         }
@@ -192,8 +192,9 @@ void gen(Node* node) {
       push_val(node->val);
       return;
     case ND_STRING:
-      // 数値を1個スタックに積む
-      printf("  push offset .LC%d\n", node->label);
+      // アドレスをスタックに積む
+      printf("  ldr r4, .L4+%d\n", node->label * 4);
+      printf("  push {r4}\n");
       return;
     case ND_LVAR:
     case ND_GVAR:
@@ -419,9 +420,10 @@ void gen(Node* node) {
 
 void gen_strings() {
   for (int i = 0; i < all_strings->size; ++i) {
+    printf("  .align 2\n");
     printf(".LC%d:\n", i);
     String* str = all_strings->array[i];
-    printf("  .string \"%.*s\"\n", str->len, str->str);
+    printf("  .ascii \"%.*s\\000\"\n", str->len, str->str);
   }
 }
 
@@ -429,5 +431,11 @@ void gen_globals_list() {
   printf(".L3:\n");
   for (GVar* var = globals; var; var = var->next) {
     printf("  .word %.*s\n", var->len, var->name);
+  }
+
+  // 文字列リテラル
+  printf(".L4:\n");
+  for (int i = 0; i < all_strings->size; ++i) {
+    printf("  .word .LC%d\n", i);
   }
 }
